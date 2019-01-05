@@ -13,17 +13,14 @@ class Imitator:
 				learning_rate,
 				alpha,
 				min_squared_gradient,
-				checkpoint_frequency,
 				checkpoint_dir,
 				hist_len,
 				l2_penalty):
 		self.minimal_action_set = min_action_set
-		self.chkpt_freq = checkpoint_frequency
 		self.network = Network(len(self.minimal_action_set))
 		if torch.cuda.is_available():
 			print "Initializing Cuda Nets..."
 			self.prediction_net.cuda()
-			self.target_net.cuda()
 		self.optimizer = optim.RMSprop(self.prediction_net.parameters(),
 		lr=learning_rate, alpha=alpha, eps=min_squared_gradient, weight_decay=l2_penalty)
 		self.checkpoint_directory = checkpoint_dir
@@ -50,26 +47,9 @@ class Imitator:
 			labels[index] = action_indices[index]
 		return labels
 
-	'''
-	Args - 
-	outputs: a batchsize x #actions matrix of Q-values,
-	where each row contains the Q-values for the actions
-	action_indices: contains batchsize number of indexes. action_indices[i]
-	corresponds to the index of action taken for the ith state in the 
-	minibatch
-	'''
 	def get_loss(self, outputs, labels):
 		return nn.CrossEntropyLoss()(outputs, labels)
 
-	'''
-	Args:
-	replay_memory: An instance of the ReplayMemory class
-	defined in replaybuffer.py
-	minibatch_size: The size of the minibatch
-	save_tuple: A tuple containing two values - a boolean
-	indicating whether to checkpoint the network, and the
-	epoch number.
-	'''
 	def train(self, dataset, minibatch_size):
 		# sample a minibatch of transitions
 		sample = dataset.sample_minibatch(minibatch_size)

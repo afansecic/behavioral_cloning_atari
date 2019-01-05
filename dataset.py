@@ -56,3 +56,4 @@ class Dataset:
 			if self.minibatch_index >= self.size:
 				self.minibatch_index = 0
 				self.shuffle_indices()
+		return batch
