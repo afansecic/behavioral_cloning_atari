@@ -1,16 +1,25 @@
 import numpy as np
 import gc
 import os
+import random
+
+Example = namedtuple('Example', 'state action time')
 
 class Dataset:
 
 	def __init__(self, size, hist_len):
 		self.size = size
 		self.hist_len = hist_len
-		self.states = np.empty((size, 84, 84), dtype=np.uint8)
+		self.states = np.empty((4, size, 84, 84), dtype=np.uint8)
 		self.actions = np.empty(size, dtype=np.uint8)
 		self.times = np.empty(size dtype=np.uint8)
 		self.index = 0
+		self.sample_indices = range(size)
+		self.shuffle_indices()
+		self.minibatch_index = 0
+
+	def shuffle_indices():
+		random.shuffle(self.sample_indices)
 
 	def clear(self):
 		self.states = np.empty((self.size, 84, 84), dtype=np.uint8)
@@ -28,20 +37,22 @@ class Dataset:
 		self.times = np.load(os.path.join(storage_dir, "times" + ".npy"))
 
 	def add_item(self, state, action, time=None):
+		if self.index == self.size:
+			raise ValueError("Dataset is full. Clear dataset before adding anything.")
 		# input a_t, r_t, f_t+1, episode done at t+1
 		self.states[self.index, ...] = state
 		self.actions[self.index] = action
-		self.time[self.index] = reward
-		self.terminals[self.index] = episode_done
+		self.time[self.index] = time
 		self.index += 1
-		if self.index == STORAGE_BATCH_SIZE:
-			self.store_experiences()
-			self.reset()
 
-	def get_next(self):
-		if self.index == STORAGE_BATCH_SIZE:
-			self.reset()
-			self.load_experiences(self.count)
-		state, action, reward, terminal = self.states[self.index], self.actions[self.index], self.rewards[self.index], self.terminals[self.index]
-		self.index += 1
-		return state, action, reward, terminal
+	def sample_minibatch(self, batch_size):
+		batch = []
+		for _ in range(batch_size):
+			index = self.sample_indices(self.minibatch_index)
+			batch.append(Example(state=self.states[index],
+								action=self.actions[index],
+								time=self.time[index]))
+			self.minibatch_index = self.minibatch_index + 1
+			if self.minibatch_index >= self.size:
+				self.minibatch_index = 0
+				self.shuffle_indices()
