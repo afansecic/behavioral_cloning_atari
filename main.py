@@ -14,7 +14,9 @@ def print_args(args, file):
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 
-	parser.add_argument("--rom", default="", type=str, required=True)
+	parser.add_argument("--rom",
+		default="/u/prabhatn/ale/thesis/dqn/roms/pong.bin",
+		type=str, required=True)
 
 	'''
 	Random seed for the Arcade Learning Environment
