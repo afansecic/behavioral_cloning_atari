@@ -2,6 +2,7 @@ import numpy as np
 import gc
 import os
 import random
+from collections import namedtuple
 
 Example = namedtuple('Example', 'state action time')
 
@@ -12,7 +13,7 @@ class Dataset:
 		self.hist_len = hist_len
 		self.states = np.empty((4, size, 84, 84), dtype=np.uint8)
 		self.actions = np.empty(size, dtype=np.uint8)
-		self.times = np.empty(size dtype=np.uint8)
+		self.times = np.empty(size, dtype=np.uint8)
 		self.index = 0
 		self.sample_indices = range(size)
 		self.shuffle_indices()
