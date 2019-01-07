@@ -1,6 +1,5 @@
 import os
 from bc import Imitator
-from preprocess import Preprocessor
 import numpy as np
 from dataset import Example, Dataset
 import utils
