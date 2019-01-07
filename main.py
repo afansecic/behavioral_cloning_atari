@@ -3,6 +3,7 @@ import argparse
 import numpy as np
 from train import train
 from pdb import set_trace
+import episodic_segmentation
 
 def print_args(args, file):
 	arguments = vars(args)
@@ -13,7 +14,7 @@ def print_args(args, file):
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 
-	parser.add_argument("--rom", type=str, required=True)
+	parser.add_argument("--rom", default="", type=str, required=True)
 
 	'''
 	Random seed for the Arcade Learning Environment
@@ -36,8 +37,12 @@ if __name__ == '__main__':
 	# ##                   Files                      ##
 	# ##################################################
 
-	parser.add_argument('--storage-dir', required=True)
-	parser.add_argument('--storage-size', type=int, required=True)
+	parser.add_argument('--storage-dir',
+		default="/scratch/cluster/prabhatn/imitation/offline/pong0/storage", 
+		required=True)
+	parser.add_argument('--storage-size',
+		default=200000,
+		type=int, required=True)
 
 	args = parser.parse_args()
 
@@ -45,11 +50,12 @@ if __name__ == '__main__':
 	print_args(args, args_file)
 
 
-	# storage_dir = args.storage_dir # goscratch and imitation dir
-	# batch_storage_size = args.storage_size #200000
-	# episodes = extract_episodes(storage_dir, batch_storage_size)
-	# episodes = sorted(episodes, key=lambda x: (x[2], x[0]))
-	# # episodes has tuples of the form start time, end time, total reward
+	storage_dir = args.storage_dir # goscratch and imitation dir
+	batch_storage_size = args.storage_size #200000
+	episodes = episodic_segmentation.extract_episodes(storage_dir, batch_storage_size)
+	episodes = sorted(episodes, key=lambda x: (x[2], x[0]))
+	set_trace()
+	# episodes has tuples of the form start time, end time, total reward
 	# start, end, total_reward = episodes[0]
 	# episode = Episode(episodes[0][0], episodes[0][1], batch_storage_size, storage_dir, 4)
 	# # episode[i] returns a dict (state, action, reward, terminal, next_state)
@@ -74,5 +80,3 @@ if __name__ == '__main__':
 		args.checkpoint_frequency,
 		args.updates,
 		dataset)
-
-	set_trace()
