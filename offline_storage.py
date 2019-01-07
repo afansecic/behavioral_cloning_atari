@@ -1,4 +1,3 @@
-from constants import *
 import numpy as np
 import gc
 import os
@@ -29,20 +28,21 @@ class StorageBuffer(object):
 
 class OfflineStorage:
 
-	def __init__(self, storage_batch_size=STORAGE_BATCH_SIZE, offline_dir=OFFLINE_DIR):
-		self.states = np.empty((STORAGE_BATCH_SIZE, 84, 84), dtype=np.uint8)
-		self.actions = np.empty(STORAGE_BATCH_SIZE, dtype=np.uint8)
-		self.rewards = np.empty(STORAGE_BATCH_SIZE)
-		self.terminals = np.empty(STORAGE_BATCH_SIZE, dtype=np.bool)
+	def __init__(self, storage_batch_size, offline_dir):
+		self.storage_batch_size = storage_batch_size
+		self.states = np.empty((storage_batch_size, 84, 84), dtype=np.uint8)
+		self.actions = np.empty(storage_batch_size, dtype=np.uint8)
+		self.rewards = np.empty(storage_batch_size)
+		self.terminals = np.empty(storage_batch_size, dtype=np.bool)
 		self.offline_dir = os.path.join(offline_dir,"")
 		self.index = 0
 		self.count = 0
 
 	def reset(self):
-		self.states = np.empty((STORAGE_BATCH_SIZE, 84, 84), dtype=np.uint8)
-		self.actions = np.empty(STORAGE_BATCH_SIZE, dtype=np.uint8)
-		self.rewards = np.empty(STORAGE_BATCH_SIZE)
-		self.terminals = np.empty(STORAGE_BATCH_SIZE, dtype=np.bool)
+		self.states = np.empty((self.storage_batch_size, 84, 84), dtype=np.uint8)
+		self.actions = np.empty(self.storage_batch_size, dtype=np.uint8)
+		self.rewards = np.empty(self.storage_batch_size)
+		self.terminals = np.empty(self.storage_batch_size, dtype=np.bool)
 		self.index = 0
 		gc.collect()
 
@@ -67,12 +67,12 @@ class OfflineStorage:
 		self.rewards[self.index] = reward
 		self.terminals[self.index] = episode_done
 		self.index += 1
-		if self.index == STORAGE_BATCH_SIZE:
+		if self.index == self.storage_batch_size:
 			self.store_experiences()
 			self.reset()
 
 	def get_next(self):
-		if self.index == STORAGE_BATCH_SIZE:
+		if self.index == self.storage_batch_size:
 			self.reset()
 			self.load_experiences(self.count)
 		state, action, reward, terminal = self.states[self.index], self.actions[self.index], self.rewards[self.index], self.terminals[self.index]

@@ -3,7 +3,7 @@ import argparse
 import numpy as np
 from train import train
 from pdb import set_trace
-import episodic_segmentation
+import episode_segmentation
 
 def print_args(args, file):
 	arguments = vars(args)
@@ -16,7 +16,7 @@ if __name__ == '__main__':
 
 	parser.add_argument("--rom",
 		default="/u/prabhatn/ale/thesis/dqn/roms/pong.bin",
-		type=str, required=True)
+		type=str)
 
 	'''
 	Random seed for the Arcade Learning Environment
@@ -40,21 +40,20 @@ if __name__ == '__main__':
 	# ##################################################
 
 	parser.add_argument('--storage-dir',
-		default="/scratch/cluster/prabhatn/imitation/offline/pong0/storage", 
-		required=True)
+		default="/scratch/cluster/prabhatn/imitation/offline/pong0/storage")
 	parser.add_argument('--storage-size',
 		default=200000,
-		type=int, required=True)
+		type=int)
 
 	args = parser.parse_args()
 
-	args_file = open(args.args_output_file, "w")
-	print_args(args, args_file)
+	# args_file = open(args.args_output_file, "w")
+	# print_args(args, args_file)
 
 
 	storage_dir = args.storage_dir # goscratch and imitation dir
 	batch_storage_size = args.storage_size #200000
-	episodes = episodic_segmentation.extract_episodes(storage_dir, batch_storage_size)
+	episodes = episode_segmentation.extract_episodes(storage_dir, batch_storage_size)
 	episodes = sorted(episodes, key=lambda x: (x[2], x[0]))
 	set_trace()
 	# episodes has tuples of the form start time, end time, total reward
