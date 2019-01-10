@@ -11,7 +11,7 @@ class Dataset:
 	def __init__(self, size, hist_len):
 		self.size = size
 		self.hist_len = hist_len
-		self.states = np.empty((4, size, 84, 84), dtype=np.uint8)
+		self.states = np.empty((hist_len, size, 84, 84), dtype=np.float32)
 		self.actions = np.empty(size, dtype=np.uint8)
 		self.times = np.empty(size, dtype=np.uint8)
 		self.index = 0

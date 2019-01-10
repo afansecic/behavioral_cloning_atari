@@ -4,6 +4,8 @@ import numpy as np
 from train import train
 from pdb import set_trace
 import episode_segmentation
+import dataset
+from episode_segmentation import Episode
 
 def print_args(args, file):
 	arguments = vars(args)
@@ -26,7 +28,8 @@ if __name__ == '__main__':
 	# ##################################################
 	# ##             Algorithm parameters             ##
 	# ##################################################
-	parser.add_argument("--updates", type=int, default=75000)
+	parser.add_argument("--dataset-size", type=int, default=75000)
+	parser.add_argument("--updates", type=int, default=200000)
 	parser.add_argument("--minibatch-size", type=int, default=32)
 	parser.add_argument("--hist-len", type=int, default=4)
 	parser.add_argument("--discount", type=float, default=0.99)
@@ -55,20 +58,34 @@ if __name__ == '__main__':
 	batch_storage_size = args.storage_size #200000
 	episodes = episode_segmentation.extract_episodes(storage_dir, batch_storage_size)
 	episodes = sorted(episodes, key=lambda x: (x[2], x[0]))
-	set_trace()
 	# episodes has tuples of the form start time, end time, total reward
-	# start, end, total_reward = episodes[0]
-	# episode = Episode(episodes[0][0], episodes[0][1], batch_storage_size, storage_dir, 4)
-	# # episode[i] returns a dict (state, action, reward, terminal, next_state)
-	# # get first step of episode	
-	# transition = episode[0]
-	# print transition['state']
-	# print transition['next_state']
-	# print transition['reward']
-	# print transition['action']
-	# print transition['terminal']
-	# print sum([episode[i]['terminal'] for i in range(episode.episode_len)])
+	start, end, total_reward = episodes[0]
+	episode = Episode(episodes[0][0], episodes[0][1], batch_storage_size, storage_dir, 4)
+	# episode[i] returns a dict (state, action, reward, terminal, next_state)
+	# get first step of episode	
+	num_episodes = len(episodes)
+	demo_episodes = [Episode(episodes[i][0],episodes[i][1],
+							batch_storage_size,
+							storage_dir, 4) 
+							for i in range(num_episodes - 10,
+										num_episodes)]
 
+	dataset = dataset.dataset(args.dataset_size, args.hist_len)
+	episode_index_counter = 0
+	dataset_size = 0
+	for episode in demo_episodes:
+		for index in range(episode.episode_len):
+			transition = episode[index]
+			state = transition['state']
+			action = transition['action']
+			dataset.add_item(state, action)
+			dataset_size += 1
+			if dataset_size == args.dataset_size:
+				break
+		if dataset_size == args.dataset_size:
+			break
+
+	set_trace()
 	train(args.rom,
 		args.ale_seed,
 		args.learning_rate,
