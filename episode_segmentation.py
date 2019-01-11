@@ -51,8 +51,8 @@ class Episode(object):
 		batch_num_start = start/storage_size
 		batch_num_end = end/storage_size
 		storage_buffs = [StorageBuffer(self.storage_size) for i in range(batch_num_start, batch_num_end + 1)]
-		for i in range(batch_num_start, batch_num_end + 1):
-			storage_buffs[i].load_experiences(offline_dir, i)
+		for i in range(0, batch_num_end - batch_num_start + 1):
+			storage_buffs[i].load_experiences(offline_dir, batch_num_start + i)
 		return storage_buffs
 
 	def __getitem__(self, index):

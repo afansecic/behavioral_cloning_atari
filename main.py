@@ -68,9 +68,9 @@ if __name__ == '__main__':
 							batch_storage_size,
 							storage_dir, 4) 
 							for i in range(num_episodes - 10,
-										num_episodes)]
+										num_episodes-1)]
 
-	dataset = dataset.dataset(args.dataset_size, args.hist_len)
+	data = dataset.Dataset(args.dataset_size, args.hist_len)
 	episode_index_counter = 0
 	dataset_size = 0
 	for episode in demo_episodes:
@@ -78,7 +78,7 @@ if __name__ == '__main__':
 			transition = episode[index]
 			state = transition['state']
 			action = transition['action']
-			dataset.add_item(state, action)
+			data.add_item(state, action)
 			dataset_size += 1
 			if dataset_size == args.dataset_size:
 				break
@@ -97,4 +97,4 @@ if __name__ == '__main__':
 		args.discount,
 		args.checkpoint_frequency,
 		args.updates,
-		dataset)
+		data)
