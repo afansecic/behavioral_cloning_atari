@@ -5,14 +5,11 @@ import torch
 checkpointing source:
 https://blog.floydhub.com/checkpointing-tutorial-for-tensorflow-keras-and-pytorch/
 '''
-def save_checkpoint(state, epoch, checkpoint_dir):
-	filename = checkpoint_dir + '/epoch' + str(epoch) + '.pth.tar'
+def save_checkpoint(state, checkpoint_dir):
+	filename = checkpoint_dir + '/network.pth.tar'
 	print "Saving checkpoint for epoch " + str(epoch) + " at " + filename + " ..."
 	torch.save(state, filename)  # save checkpoint
 	print "Saved checkpoint."
-
-def checkpoint_exists(checkpoint_dir, epoch):
-	return os.path.isfile(checkpoint_dir+'/epoch'+ str(epoch) + '.pth.tar')
 
 def get_checkpoint(checkpoint_dir, epoch):
 	resume_weights = checkpoint_dir + '/epoch' + str(epoch) + '.pth.tar'

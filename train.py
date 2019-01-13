@@ -23,7 +23,7 @@ def train(rom,
 	ale = ALEInterfaceWrapper(action_repeat_probability)
 
 	#Set the random seed for the ALE
-	ale.setInt('random_seed', ALE_SEED)
+	ale.setInt('random_seed', ale_seed)
 
 	# Load the ROM file
 	ale.loadROM(rom)

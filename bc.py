@@ -20,8 +20,8 @@ class Imitator:
 		self.network = Network(len(self.minimal_action_set))
 		if torch.cuda.is_available():
 			print "Initializing Cuda Nets..."
-			self.prediction_net.cuda()
-		self.optimizer = optim.RMSprop(self.prediction_net.parameters(),
+			self.network.cuda()
+		self.optimizer = optim.RMSprop(self.network.parameters(),
 		lr=learning_rate, alpha=alpha, eps=min_squared_gradient, weight_decay=l2_penalty)
 		self.checkpoint_directory = checkpoint_dir
 
@@ -77,13 +77,12 @@ class Imitator:
 	'''
 	Args:
 	epoch - the training epoch number
-	This function checkpoints the prediction
-	network.
+	This function checkpoints the network.
 	'''
 	def checkpoint_network(self, epoch):
 		print "Checkpointing Weights"
 		utils.save_checkpoint({
 			'epoch': epoch, 
-			'state_dict': self.prediction_net.state_dict()
+			'state_dict': self.network.state_dict()
 			}, epoch, self.checkpoint_directory)
 		print "Checkpointed."
