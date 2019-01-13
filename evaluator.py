@@ -51,7 +51,7 @@ class Evaluator:
 				if np.random.uniform() < 0.05:
 					action = np.random.choice(action_set)
 				else:
-					action = agent.get_action(state)
+					action = agent.get_action(state.get_state())
 				for _ in range(self.action_repeat):
 					episode_reward += ale.act(action)
 					preprocessor.add(ale.getScreenRGB())
