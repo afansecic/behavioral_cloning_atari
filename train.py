@@ -40,8 +40,10 @@ def train(rom,
 				hist_len,
 				l2_penalty)
 
+	print "Beginning training..."
 	for update in range(updates):
 		agent.train(dataset, 32)
+	print "Training completed."
 
 if __name__ == '__main__':
 	train()
