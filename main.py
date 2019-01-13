@@ -24,6 +24,7 @@ if __name__ == '__main__':
 	Random seed for the Arcade Learning Environment
 	'''
 	parser.add_argument("--ale-seed", type=int, default=123)
+	parser.add_argument("--action-repeat-probability", type=float, default=0.0)
 
 	# ##################################################
 	# ##             Algorithm parameters             ##
@@ -37,6 +38,8 @@ if __name__ == '__main__':
 
 	parser.add_argument("--alpha", type=float, default=0.95)
 	parser.add_argument("--min-squared-gradient", type=float, default=0.01)
+	parser.add_argument("--l2-penalty", type=float, default=0.00001)
+	parser.add_argument("--checkpoint-dir", type=str, default="/u/prabhatn/behavioral_cloning_atari/checkpoints")
 
 	# ##################################################
 	# ##                   Files                      ##
@@ -85,9 +88,9 @@ if __name__ == '__main__':
 		if dataset_size == args.dataset_size:
 			break
 
-	set_trace()
 	train(args.rom,
 		args.ale_seed,
+		args.action_repeat_probability,
 		args.learning_rate,
 		args.alpha,
 		args.min_squared_gradient,
@@ -95,6 +98,6 @@ if __name__ == '__main__':
 		args.minibatch_size,
 		args.hist_len,
 		args.discount,
-		args.checkpoint_frequency,
+		args.checkpoint_dir,
 		args.updates,
 		data)

@@ -7,6 +7,7 @@ from ale_wrapper import ALEInterfaceWrapper
 
 def train(rom,
 		ale_seed,
+		action_repeat_probability,
 		learning_rate,
 		alpha,
 		min_squared_gradient,
@@ -19,7 +20,7 @@ def train(rom,
 		dataset):
 
 
-	ale = ALEInterfaceWrapper()
+	ale = ALEInterfaceWrapper(action_repeat_probability)
 
 	#Set the random seed for the ALE
 	ale.setInt('random_seed', ALE_SEED)
