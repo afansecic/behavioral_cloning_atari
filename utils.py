@@ -7,12 +7,12 @@ https://blog.floydhub.com/checkpointing-tutorial-for-tensorflow-keras-and-pytorc
 '''
 def save_checkpoint(state, checkpoint_dir):
 	filename = checkpoint_dir + '/network.pth.tar'
-	print "Saving checkpoint for epoch " + str(epoch) + " at " + filename + " ..."
+	print "Saving checkpoint at " + filename + " ..."
 	torch.save(state, filename)  # save checkpoint
 	print "Saved checkpoint."
 
-def get_checkpoint(checkpoint_dir, epoch):
-	resume_weights = checkpoint_dir + '/epoch' + str(epoch) + '.pth.tar'
+def get_checkpoint(checkpoint_dir):
+	resume_weights = checkpoint_dir + '/network.pth.tar'
 	if torch.cuda.is_available():
 		print "Attempting to load Cuda weights..."
 		checkpoint = torch.load(resume_weights)
