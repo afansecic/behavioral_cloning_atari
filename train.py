@@ -5,6 +5,21 @@ from dataset import Example, Dataset
 import utils
 from ale_wrapper import ALEInterfaceWrapper
 from evaluator import Evaluator
+from pdb import set_trace
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
+#try bmh
+plt.style.use('bmh')
+
+
+def plot(losses):
+		p=plt.plot(losses)
+		axes.set_ylim([min(losses), max(losses)])
+		plt.xlabel("Update")
+		plt.ylabel("Loss")
+		plt.legend(loc='lower center')
+		plt.savefig('/u/prabhatn/behavioral_cloning_atari/checkpoints/loss.png')
 
 def train(rom,
 		ale_seed,
@@ -53,7 +68,11 @@ def train(rom,
 		update += 1
 	print "Training completed."
 	agent.checkpoint_network()
-
+	#Plot losses
+	losses = []
+	for loss in agent.losses:
+		losses.append(loss.data.cpu().numpy())
+	plot(loss)
 	#Evaluation
 	evaluator = Evaluator(rom=rom)
 	evaluator.evaluate(agent)

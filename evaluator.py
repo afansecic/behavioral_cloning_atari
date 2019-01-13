@@ -48,7 +48,7 @@ class Evaluator:
 			utils.perform_no_ops(ale, 30, preprocessor, state)
 			episode_reward = 0
 			while not ale.game_over() and steps < self.time_limit:
-				if np.random.uniform() < 0.05:
+				if np.random.uniform() < 0.01:
 					action = np.random.choice(action_set)
 				else:
 					action = agent.get_action(state.get_state())
