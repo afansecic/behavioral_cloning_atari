@@ -1,0 +1,18 @@
+
+# doc at : http://research.cs.wisc.edu/htcondor/manual/current/condor_submit.html
+#remote_initialdir = /scratch/cluster/zharucs/gymve/dqn_soa/baselines/deepq/experiments/
++Group ="GRAD"
++Project ="AI_ROBOTICS"
++ProjectDescription="ale"
++GPUJob=true
+Universe = vanilla
+
+# UTCS has 18 such machine, to take a look, run 'condor_status  -constraint 'GTX1080==true' 
+Requirements=(TARGET.GTX1080==true)
+executable = /u/prabhatn/behavioral_cloning_atari/run.sh
+getenv = true
+output = CondorOutput/$(Cluster).out
+error = CondorOutput/$(Cluster).err
+Notification = Complete
+log = CondorOutput/log.txt
+Queue
