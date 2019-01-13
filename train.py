@@ -19,12 +19,12 @@ def smooth(losses, run=10):
 		new_losses.append(np.mean(losses[max(0, i - 10):i+1]))
 	return new_losses
 
-def plot(losses):
+def plot(losses, checkpoint_dir):
 		p=plt.plot(smooth(losses, 25))
 		plt.xlabel("Update")
 		plt.ylabel("Loss")
 		plt.legend(loc='lower center')
-		plt.savefig('/u/prabhatn/behavioral_cloning_atari/checkpoints/loss.png')
+		plt.savefig(os.path.join(checkpoint_dir, "loss.png"))
 
 def train(rom,
 		ale_seed,
@@ -77,7 +77,7 @@ def train(rom,
 	losses = []
 	for loss in agent.losses:
 		losses.append(loss.data.cpu().numpy())
-	plot(losses)
+	plot(losses, checkpoint_dir)
 	#Evaluation
 	evaluator = Evaluator(rom=rom)
 	evaluator.evaluate(agent)
