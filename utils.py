@@ -26,11 +26,11 @@ def get_checkpoint(checkpoint_dir, epoch):
 		print "Loaded weights."
 	return checkpoint
 
-def int_tensor(input):
+def long_tensor(input):
 	if torch.cuda.is_available():
-		return torch.cuda.IntTensor(input)
+		return torch.cuda.LongTensor(input)
 	else:
-		return torch.IntTensor(input)
+		return torch.LongTensor(input)
 
 def float_tensor(input):
 	if torch.cuda.is_available():

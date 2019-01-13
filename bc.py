@@ -38,7 +38,7 @@ class Imitator:
 
 	# potentially optimizable
 	def compute_labels(self, sample, minibatch_size):
-		labels = Variable(utils.int_tensor(minibatch_size))
+		labels = Variable(utils.long_tensor(minibatch_size))
 		# The list of ALE actions taken for the minibatch
 		actions_taken = [x.action for x in sample]
 		# The indices of the ALE actions taken in the action set

@@ -44,7 +44,7 @@ class Dataset:
 	def sample_minibatch(self, batch_size):
 		batch = []
 		for _ in range(batch_size):
-			index = self.sample_indices(self.minibatch_index)
+			index = self.sample_indices[self.minibatch_index]
 			batch.append(Example(state=self.states[index],
 								action=self.actions[index]))
 			self.minibatch_index = self.minibatch_index + 1
