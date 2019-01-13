@@ -41,8 +41,15 @@ def train(rom,
 				l2_penalty)
 
 	print "Beginning training..."
-	for update in range(updates):
+	log_frequency = 1000
+	log_num = log_frequency
+	update = 1
+	while update < updates:
+		if update > log_num:
+			print(str(update) + " updates completed.")
+			log_num += log_frequency
 		agent.train(dataset, 32)
+		update += 1
 	print "Training completed."
 
 if __name__ == '__main__':
