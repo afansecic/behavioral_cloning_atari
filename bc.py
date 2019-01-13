@@ -76,13 +76,11 @@ class Imitator:
 
 	'''
 	Args:
-	epoch - the training epoch number
 	This function checkpoints the network.
 	'''
-	def checkpoint_network(self, epoch):
+	def checkpoint_network(self):
 		print "Checkpointing Weights"
 		utils.save_checkpoint({
-			'epoch': epoch, 
 			'state_dict': self.network.state_dict()
-			}, epoch, self.checkpoint_directory)
+			}, self.checkpoint_directory)
 		print "Checkpointed."

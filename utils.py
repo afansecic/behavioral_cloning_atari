@@ -1,6 +1,6 @@
 import os.path
 import torch
-
+import numpy as np
 '''
 checkpointing source:
 https://blog.floydhub.com/checkpointing-tutorial-for-tensorflow-keras-and-pytorch/
@@ -38,9 +38,9 @@ def float_tensor(input):
 	else:
 		return torch.FloatTensor(input)
 
-def perform_no_ops(ale, no_op_max, preprocessor, state, random_state):
-	#perform nullops
-	num_no_ops = random_state.randint(1, no_op_max + 1)
+def perform_no_ops(ale, no_op_max, preprocessor, state):
+	# perform nullops
+	num_no_ops = np.random.randint(1, no_op_max + 1)
 	for _ in range(num_no_ops):
 		ale.act(0)
 		preprocessor.add(ale.getScreenRGB())

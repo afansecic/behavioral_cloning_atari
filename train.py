@@ -4,6 +4,7 @@ import numpy as np
 from dataset import Example, Dataset
 import utils
 from ale_wrapper import ALEInterfaceWrapper
+from evaluator import Evaluator
 
 def train(rom,
 		ale_seed,
@@ -41,7 +42,7 @@ def train(rom,
 				l2_penalty)
 
 	print "Beginning training..."
-	log_frequency = 1000
+	log_frequency = 10
 	log_num = log_frequency
 	update = 1
 	while update < updates:
@@ -51,6 +52,12 @@ def train(rom,
 		agent.train(dataset, 32)
 		update += 1
 	print "Training completed."
+	agent.checkpoint_network()
+
+	#Evaluation
+	evaluator = Evaluator(rom)
+	evaluator.evaluate(agent)
+
 
 if __name__ == '__main__':
 	train()
