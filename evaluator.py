@@ -22,7 +22,7 @@ class Evaluator:
 		self.eval(ale, agent)
 
 	def setup_eval_env(self, ale_seed, action_repeat_prob, rom):
-		ale = ALEInterfaceWrapper(action_repeat_prob, np.random.RandomState(4))
+		ale = ALEInterfaceWrapper(action_repeat_prob)
 		#Set the random seed for the ALE
 
 		ale.setInt('random_seed', ale_seed)

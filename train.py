@@ -42,7 +42,7 @@ def train(rom,
 				l2_penalty)
 
 	print "Beginning training..."
-	log_frequency = 10
+	log_frequency = 1000
 	log_num = log_frequency
 	update = 1
 	while update < updates:
