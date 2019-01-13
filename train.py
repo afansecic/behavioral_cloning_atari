@@ -13,9 +13,14 @@ import matplotlib.pyplot as plt
 plt.style.use('bmh')
 
 
+def smooth(losses, run=10):
+	new_losses = []
+	for i in range(len(losses)):
+		new_losses.append(np.mean(losses[max(0, i - 10):i+1]))
+	return new_losses
+
 def plot(losses):
-		p=plt.plot(losses)
-		axes.set_ylim([min(losses), max(losses)])
+		p=plt.plot(smooth(losses, 25))
 		plt.xlabel("Update")
 		plt.ylabel("Loss")
 		plt.legend(loc='lower center')
@@ -72,7 +77,7 @@ def train(rom,
 	losses = []
 	for loss in agent.losses:
 		losses.append(loss.data.cpu().numpy())
-	plot(loss)
+	plot(losses)
 	#Evaluation
 	evaluator = Evaluator(rom=rom)
 	evaluator.evaluate(agent)
