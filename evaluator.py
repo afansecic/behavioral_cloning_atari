@@ -58,4 +58,4 @@ class Evaluator:
 				steps += 1
 			print "Episode " + str(i) + " reward is " + str(episode_reward)
 			rewards.append(episode_reward)
-		print "Mean reward is: " str(np.mean(rewards))
+		print "Mean reward is: " + str(np.mean(rewards))
