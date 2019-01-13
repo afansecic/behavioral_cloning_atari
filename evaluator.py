@@ -5,8 +5,8 @@ import numpy as np
 
 class Evaluator:
 
-	def __init__(self, cap_eval_episodes=True, time_limit=60 * 60 * 30 / 4,
-				action_repeat, hist_len=4, rom, ale_seed=100, action_repeat_prob=0,
+	def __init__(self, rom, cap_eval_episodes=True, time_limit=60 * 60 * 30 / 4,
+				action_repeat, hist_len=4, ale_seed=100, action_repeat_prob=0,
 				num_eval_episodes=100):
 		self.cap_eval_episodes = cap_eval_episodes
 		self.time_limit = time_limit

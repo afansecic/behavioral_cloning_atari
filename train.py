@@ -55,7 +55,7 @@ def train(rom,
 	agent.checkpoint_network()
 
 	#Evaluation
-	evaluator = Evaluator(rom)
+	evaluator = Evaluator(rom=rom)
 	evaluator.evaluate(agent)
 
 
