@@ -2,6 +2,7 @@ from ale_wrapper import ALEInterfaceWrapper
 from preprocess import Preprocessor
 from state import *
 import numpy as np
+import utils
 
 class Evaluator:
 
