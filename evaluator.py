@@ -1,6 +1,6 @@
 from ale_wrapper import ALEInterfaceWrapper
 from preprocess import Preprocessor
-from replaybuffer import *
+from state import *
 import numpy as np
 
 class Evaluator:
