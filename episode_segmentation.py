@@ -28,7 +28,7 @@ class Episode(object):
 		storage_buffer = buffers[storage_index]
 		episode_index = 0
 		for i in range(num_items):
-			if index > self.storage_size:
+			if index >= self.storage_size:
 				index = 0
 				storage_index += 1
 				storage_buffer = buffers[storage_index]
