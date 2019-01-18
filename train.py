@@ -67,6 +67,7 @@ def train(env_name,
 		losses.append(loss.data.cpu().numpy())
 	plot(losses, checkpoint_dir, env_name)
 	#Evaluation
+	print("beginning evaluation")
 	evaluator = Evaluator(env_name, num_eval_episodes, checkpoint_dir)
 	evaluator.evaluate(agent)
 

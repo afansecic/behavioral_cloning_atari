@@ -26,7 +26,7 @@ def mask_score(obs):
     obs[:,:n,:,:] = 0
     return obs
 
-def generate_transitions(env, num_steps = 10000):
+def generate_transitions(env, num_steps = 20000):
     print("learning inverse transition dynamics")
     if env_name == "spaceinvaders":
         env_id = "SpaceInvadersNoFrameskip-v4"
@@ -71,6 +71,7 @@ def generate_transitions(env, num_steps = 10000):
             if step_cnt >= num_steps:
                 break
             if done:
+                #print("done")
                 break
     return transitions
 
@@ -156,7 +157,7 @@ if __name__ == '__main__':
     parser.add_argument("--min-squared-gradient", type=float, default=0.01)
     parser.add_argument("--l2-penalty", type=float, default=0.0001)
     parser.add_argument("--checkpoint-dir", type=str, default="./checkpoints_bco")
-    parser.add_argument("--num_eval_episodes", type=int, default = 3)
+    parser.add_argument("--num_eval_episodes", type=int, default = 30)
     parser.add_argument('--seed', default=0, help="random seed for experiments")
 
     args = parser.parse_args()
@@ -233,7 +234,7 @@ if __name__ == '__main__':
         args.hist_len*2,
         args.discount,
         args.checkpoint_dir,
-        transition_dataset_size,
+        transition_dataset_size*3,
         transition_data, args.num_eval_episodes)
 
 
