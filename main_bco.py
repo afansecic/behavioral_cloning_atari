@@ -152,7 +152,7 @@ if __name__ == '__main__':
     parser.add_argument("--minibatch-size", type=int, default=32)
     parser.add_argument("--hist-len", type=int, default=4)
     parser.add_argument("--discount", type=float, default=0.99)
-    parser.add_argument("--learning-rate", type=float, default=0.00025)
+    parser.add_argument("--learning-rate", type=float, default=0.0001)
     parser.add_argument("--env_name", type=str, help="Atari environment name in lowercase, i.e. 'beamrider'")
 
     parser.add_argument("--alpha", type=float, default=0.95)
@@ -303,5 +303,5 @@ if __name__ == '__main__':
         args.hist_len,
         args.discount,
         args.checkpoint_dir,
-        dataset_size*3,
+        dataset_size*4,
         data, args.num_eval_episodes)
