@@ -10,13 +10,6 @@ from torch.autograd import Variable
 import utils
 
 
-def normalize_state(obs):
-    obs_highs = env.observation_space.high
-    obs_lows = env.observation_space.low
-    #print(obs_highs)
-    #print(obs_lows)
-    #return  2.0 * (obs - obs_lows) / (obs_highs - obs_lows) - 1.0
-    return obs / 255.0
 
 
 def mask_score(obs):
@@ -26,7 +19,7 @@ def mask_score(obs):
     obs[:,:n,:,:] = 0
     return obs
 
-def generate_transitions(env, num_steps = 20000):
+def generate_transitions(env, num_steps = 100000):
     print("learning inverse transition dynamics")
     if env_name == "spaceinvaders":
         env_id = "SpaceInvadersNoFrameskip-v4"
@@ -50,7 +43,7 @@ def generate_transitions(env, num_steps = 20000):
     transitions = []
     while step_cnt < num_steps:
         ob = env.reset()
-        state = mask_score(normalize_state(ob))
+        state = mask_score(ob)
         state = np.transpose(state, (0, 3, 1, 2)).squeeze()
 
         while True:
@@ -59,7 +52,7 @@ def generate_transitions(env, num_steps = 20000):
             #preprocess the state
             action = env.action_space.sample()
             ob, reward, done, _ = env.step(action)
-            next_state = mask_score(normalize_state(ob))
+            next_state = mask_score(ob)
             next_state = np.transpose(next_state, (0, 3, 1, 2)).squeeze()
             #print(next_state.shape)
             #print(state.shape)
@@ -119,7 +112,7 @@ def generate_novice_demo_observations(env, env_name, agent):
             acc_reward = 0
             while True:
                 action = agent.act(ob, r, done)
-                traj.append(mask_score(normalize_state(ob)))
+                traj.append(mask_score(ob))
                 ob, r, done, _ = env.step(action)
                 #print(ob.shape)
 
@@ -234,7 +227,7 @@ if __name__ == '__main__':
         args.hist_len*2,
         args.discount,
         args.checkpoint_dir,
-        transition_dataset_size*3,
+        transition_dataset_size*4,
         transition_data, args.num_eval_episodes)
 
 

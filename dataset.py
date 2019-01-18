@@ -6,6 +6,14 @@ from collections import namedtuple
 
 Example = namedtuple('Example', 'state action')
 
+def normalize_state(obs):
+
+    #print(obs_highs)
+    #print(obs_lows)
+    #return  2.0 * (obs - obs_lows) / (obs_highs - obs_lows) - 1.0
+    return obs / 255.0
+
+
 class Dataset:
 
 	def __init__(self, size, hist_len):
@@ -45,7 +53,7 @@ class Dataset:
 		batch = []
 		for _ in range(batch_size):
 			index = self.sample_indices[self.minibatch_index]
-			batch.append(Example(state=self.states[index],
+			batch.append(Example(state=normalize_state(self.states[index]),
 								action=self.actions[index]))
 			self.minibatch_index = self.minibatch_index + 1
 			if self.minibatch_index >= self.size:

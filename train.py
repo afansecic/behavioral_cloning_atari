@@ -20,6 +20,7 @@ def smooth(losses, run=10):
 	return new_losses
 
 def plot(losses, checkpoint_dir, env_name):
+		print("Plotting losses to ", os.path.join(checkpoint_dir, env_name + "_loss.png"))
 		p=plt.plot(smooth(losses, 25))
 		plt.xlabel("Update")
 		plt.ylabel("Loss")
