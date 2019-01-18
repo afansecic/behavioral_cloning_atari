@@ -99,11 +99,14 @@ def train_transitions(env_name,
 	log_frequency = 1000
 	log_num = log_frequency
 	update = 1
+	running_loss = 0.
 	while update < updates:
 		if update > log_num:
-			print(str(update) + " updates completed.")
+			print(str(update) + " updates completed. Loss {}".format(running_loss / log_frequency))
 			log_num += log_frequency
-		agent.train(dataset, minibatch_size)
+			running_loss = 0
+		l = agent.train(dataset, minibatch_size)
+		running_loss += l
 		update += 1
 	print("Training completed.")
 	agent.checkpoint_network(env_name + "_transitions")

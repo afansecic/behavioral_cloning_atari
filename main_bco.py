@@ -19,7 +19,7 @@ def mask_score(obs):
     obs[:,:n,:,:] = 0
     return obs
 
-def generate_transitions(env, num_steps = 10000):
+def generate_transitions(env, num_steps = 1000):
     print("learning inverse transition dynamics")
     if env_name == "spaceinvaders":
         env_id = "SpaceInvadersNoFrameskip-v4"

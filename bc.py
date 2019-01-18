@@ -81,6 +81,7 @@ class Imitator:
 		self.losses.append(loss)
 		loss.backward()
 		self.optimizer.step()
+		return loss
 
 	'''
 	Args:
