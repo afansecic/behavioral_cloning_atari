@@ -1,0 +1,3 @@
+module load tacc-singularity
+singularity exec --nv ${SINGULARITY_CACHEDIR}/tacc-maverick-ml-latest.simg python -c "import torch; print(torch.cuda.is_available())"
+singularity exec --nv ${SINGULARITY_CACHEDIR}/tacc-maverick-ml-latest.simg python main_bco.py --env_name seaquest --num_transitions 20000
