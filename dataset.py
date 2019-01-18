@@ -12,9 +12,9 @@ class Dataset:
 		self.size = size
 		self.hist_len = hist_len
 		self.states = np.empty((size, hist_len, 84, 84), dtype=np.float32)
-		self.actions = np.empty(size, dtype=np.uint8)
+		self.actions = np.empty(size)
 		self.index = 0
-		self.sample_indices = range(size)
+		self.sample_indices = list(range(size))
 		self.shuffle_indices()
 		self.minibatch_index = 0
 

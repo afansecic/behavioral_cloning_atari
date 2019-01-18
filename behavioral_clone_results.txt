@@ -1,0 +1,2 @@
+Running behavioral cloning on beamrider
+Logging to /tmp/openai-2019-01-16-14-36-49-552781

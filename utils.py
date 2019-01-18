@@ -5,25 +5,25 @@ import numpy as np
 checkpointing source:
 https://blog.floydhub.com/checkpointing-tutorial-for-tensorflow-keras-and-pytorch/
 '''
-def save_checkpoint(state, checkpoint_dir):
-	filename = checkpoint_dir + '/network.pth.tar'
-	print "Saving checkpoint at " + filename + " ..."
+def save_checkpoint(state, checkpoint_dir, env_name):
+	filename = checkpoint_dir + '/' + env_name + '_network.pth.tar'
+	print("Saving checkpoint at " + filename + " ...")
 	torch.save(state, filename)  # save checkpoint
-	print "Saved checkpoint."
+	print("Saved checkpoint.")
 
 def get_checkpoint(checkpoint_dir):
 	resume_weights = checkpoint_dir + '/network.pth.tar'
 	if torch.cuda.is_available():
-		print "Attempting to load Cuda weights..."
+		print("Attempting to load Cuda weights...")
 		checkpoint = torch.load(resume_weights)
-		print "Loaded weights."
+		print("Loaded weights.")
 	else:
-		print "Attempting to load weights for CPU..."
+		print("Attempting to load weights for CPU...")
 		# Load GPU model on CPU
 		checkpoint = torch.load(resume_weights,
 								map_location=lambda storage,
 								loc: storage)
-		print "Loaded weights."
+		print("Loaded weights.")
 	return checkpoint
 
 def long_tensor(input):

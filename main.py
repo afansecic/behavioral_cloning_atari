@@ -3,94 +3,182 @@ import argparse
 import numpy as np
 from train import train
 from pdb import set_trace
-import episode_segmentation
 import dataset
-from episode_segmentation import Episode
+import tensorflow as tf
+from run_test import *
 
-def print_args(args, file):
-	arguments = vars(args)
-	for arg in arguments:
-		file.write(str(arg) + ":" + str(arguments[arg]) + "\n")
-	file.flush()
+
+def normalize_state(obs):
+    obs_highs = env.observation_space.high
+    obs_lows = env.observation_space.low
+    #print(obs_highs)
+    #print(obs_lows)
+    #return  2.0 * (obs - obs_lows) / (obs_highs - obs_lows) - 1.0
+    return obs / 255.0
+
+
+def mask_score(obs):
+    #takes a stack of four observations and blacks out (sets to zero) top n rows
+    n = 10
+    #no_score_obs = copy.deepcopy(obs)
+    obs[:,:n,:,:] = 0
+    return obs
+
+def generate_novice_demos(env, env_name, agent):
+    checkpoint_min = 50
+    checkpoint_max = 600
+    checkpoint_step = 50
+    checkpoints = []
+    if env_name == "enduro":
+        checkpoint_min = 3100
+        checkpoint_max = 3650
+    for i in range(checkpoint_min, checkpoint_max + checkpoint_step, checkpoint_step):
+        if i < 10:
+            checkpoints.append('0000')
+        elif i < 100:
+            checkpoints.append('000' + str(i))
+        elif i < 1000:
+            checkpoints.append('00' + str(i))
+        elif i < 10000:
+            checkpoints.append('0' + str(i))
+    print(checkpoints)
+
+
+
+    demonstrations = []
+    learning_returns = []
+    learning_rewards = []
+    for checkpoint in checkpoints:
+
+        model_path = "../learning-rewards-of-learners/learner/models/" + env_name + "_25/" + checkpoint
+
+        agent.load(model_path)
+        episode_count = 1
+        for i in range(episode_count):
+            done = False
+            traj = []
+            gt_rewards = []
+            r = 0
+
+            ob = env.reset()
+            #traj.append(ob)
+            #print(ob.shape)
+            steps = 0
+            acc_reward = 0
+            while True:
+                action = agent.act(ob, r, done)
+                traj.append((mask_score(normalize_state(ob)),action))
+                ob, r, done, _ = env.step(action)
+                #print(ob.shape)
+
+                gt_rewards.append(r[0])
+                steps += 1
+                acc_reward += r[0]
+                if done:
+                    print("checkpoint: {}, steps: {}, return: {}".format(checkpoint, steps,acc_reward))
+                    break
+            print("traj length", len(traj))
+            print("demo length", len(demonstrations))
+            demonstrations.append(traj)
+            learning_returns.append(acc_reward)
+            learning_rewards.append(gt_rewards)
+    print(np.mean(learning_returns), np.max(learning_returns))
+    return demonstrations, learning_returns, learning_rewards
+
+
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 
-	parser.add_argument("--rom",
-		default="/u/prabhatn/ale/thesis/dqn/roms/pong.bin",
-		type=str)
-
-	'''
-	Random seed for the Arcade Learning Environment
-	'''
-	parser.add_argument("--ale-seed", type=int, default=123)
-	parser.add_argument("--action-repeat-probability", type=float, default=0.0)
-
 	# ##################################################
 	# ##             Algorithm parameters             ##
 	# ##################################################
-	parser.add_argument("--dataset-size", type=int, default=75000)
-	parser.add_argument("--updates", type=int, default=200000)
+	#parser.add_argument("--dataset-size", type=int, default=75000)
+	#parser.add_argument("--updates", type=int, default=10000)#200000)
 	parser.add_argument("--minibatch-size", type=int, default=32)
 	parser.add_argument("--hist-len", type=int, default=4)
 	parser.add_argument("--discount", type=float, default=0.99)
 	parser.add_argument("--learning-rate", type=float, default=0.00025)
+	parser.add_argument("--env_name", type=str, help="Atari environment name in lowercase, i.e. 'beamrider'")
 
 	parser.add_argument("--alpha", type=float, default=0.95)
 	parser.add_argument("--min-squared-gradient", type=float, default=0.01)
-	parser.add_argument("--l2-penalty", type=float, default=0.00001)
-	parser.add_argument("--checkpoint-dir", type=str, default="/u/prabhatn/behavioral_cloning_atari/checkpoints")
-
-	# ##################################################
-	# ##                   Files                      ##
-	# ##################################################
-
-	parser.add_argument('--storage-dir',
-		default="/scratch/cluster/prabhatn/imitation/offline/pong0/storage")
-	parser.add_argument('--storage-size',
-		default=200000,
-		type=int)
+	parser.add_argument("--l2-penalty", type=float, default=0.0001)
+	parser.add_argument("--checkpoint-dir", type=str, default="./checkpoints")
+	parser.add_argument("--num_eval_episodes", type=int, default = 30)
+	parser.add_argument('--seed', default=0, help="random seed for experiments")
 
 	args = parser.parse_args()
+	env_name = args.env_name
+	if env_name == "spaceinvaders":
+	    env_id = "SpaceInvadersNoFrameskip-v4"
+	elif env_name == "mspacman":
+	    env_id = "MsPacmanNoFrameskip-v4"
+	elif env_name == "videopinball":
+	    env_id = "VideoPinballNoFrameskip-v4"
+	elif env_name == "beamrider":
+	    env_id = "BeamRiderNoFrameskip-v4"
+	else:
+	    env_id = env_name[0].upper() + env_name[1:] + "NoFrameskip-v4"
 
-	# args_file = open(args.args_output_file, "w")
-	# print_args(args, args_file)
+	env_type = "atari"
+	#set seeds
+	seed = int(args.seed)
+	torch.manual_seed(seed)
+	np.random.seed(seed)
+	tf.set_random_seed(seed)
+
+	stochastic = True
 
 
-	storage_dir = args.storage_dir # goscratch and imitation dir
-	batch_storage_size = args.storage_size #200000
-	episodes = episode_segmentation.extract_episodes(storage_dir, batch_storage_size)
-	episodes = sorted(episodes, key=lambda x: (x[2], x[0]))
-	# episodes has tuples of the form start time, end time, total reward
-	start, end, total_reward = episodes[0]
-	episode = Episode(episodes[0][0], episodes[0][1], batch_storage_size, storage_dir, 4)
-	# episode[i] returns a dict (state, action, reward, terminal, next_state)
-	# get first step of episode	
-	num_episodes = len(episodes)
-	demo_episodes = [Episode(episodes[i][0],episodes[i][1],
-							batch_storage_size,
-							storage_dir, 4) 
-							for i in range(num_episodes - 10,
-										num_episodes-1)]
+	#load novice demonstrations
+	#pkl_file = open("../learning-rewards-of-learners/learner/novice_demos/" + args.env_name + "12_50.pkl", "rb")
+	#novice_data = pickle.load(pkl_file)
+	#env id, env type, num envs, and seed
+	env = make_vec_env(env_id, 'atari', 1, seed,
+	                   wrapper_kwargs={
+	                       'clip_rewards':False,
+	                       'episode_life':False,
+	                   })
 
-	data = dataset.Dataset(args.dataset_size, args.hist_len)
+
+	env = VecFrameStack(env, 4)
+	agent = PPO2Agent(env, env_type, stochastic)
+
+	demonstrations, learning_returns, _ = generate_novice_demos(env, env_name, agent)
+
+	dataset_size = sum([len(d) for d in demonstrations])
+	print("Data set size = ", dataset_size)
+
+	data = dataset.Dataset(dataset_size, args.hist_len)
 	episode_index_counter = 0
-	dataset_size = 0
-	for episode in demo_episodes:
-		for index in range(episode.episode_len):
-			transition = episode[index]
-			state = transition['state']
-			action = transition['action']
+	num_data = 0
+	action_set = set()
+	action_cnt_dict = {}
+	for episode in demonstrations:
+		for sa in episode:
+			state, action = sa
+			action = action[0]
+			action_set.add(action)
+			if action in action_cnt_dict:
+				action_cnt_dict[action] += 1
+			else:
+				action_cnt_dict[action] = 0
+			#transpose into 4x84x84 format
+			state = np.transpose(np.squeeze(state), (2, 0, 1))
 			data.add_item(state, action)
-			dataset_size += 1
-			if dataset_size == args.dataset_size:
+			num_data += 1
+			if num_data == dataset_size:
+				print("data set full")
 				break
-		if dataset_size == args.dataset_size:
+		if num_data == dataset_size:
+			print("data set full")
 			break
+	print("available actions", action_set)
+	print(action_cnt_dict)
 
-	train(args.rom,
-		args.ale_seed,
-		args.action_repeat_probability,
+	train(args.env_name,
+		action_set,
 		args.learning_rate,
 		args.alpha,
 		args.min_squared_gradient,
@@ -99,5 +187,5 @@ if __name__ == '__main__':
 		args.hist_len,
 		args.discount,
 		args.checkpoint_dir,
-		args.updates,
-		data)
+		dataset_size*3,
+		data, args.num_eval_episodes)

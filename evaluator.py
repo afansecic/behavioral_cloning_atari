@@ -1,62 +1,87 @@
-from ale_wrapper import ALEInterfaceWrapper
+#from ale_wrapper import ALEInterfaceWrapper
 from preprocess import Preprocessor
 from state import *
 import numpy as np
 import utils
+import gym
+from baselines.ppo2.model import Model
+from baselines.common.policies import build_policy
+from baselines.common.cmd_util import make_vec_env
+from baselines.common.vec_env.vec_frame_stack import VecFrameStack
+from baselines.common.vec_env.vec_normalize import VecNormalize
+from baselines.common.vec_env.vec_video_recorder import VecVideoRecorder
+
+def normalize_state(obs):
+    #obs_highs = env.observation_space.high
+    #obs_lows = env.observation_space.low
+    #print(obs_highs)
+    #print(obs_lows)
+    #return  2.0 * (obs - obs_lows) / (obs_highs - obs_lows) - 1.0
+    return obs / 255.0
+
+
+def mask_score(obs):
+    #takes a stack of four observations and blacks out (sets to zero) top n rows
+    n = 10
+    #no_score_obs = copy.deepcopy(obs)
+    obs[:,:n,:,:] = 0
+    return obs
 
 class Evaluator:
 
-	def __init__(self, rom, cap_eval_episodes=True, time_limit=60 * 60 * 30 / 4,
-				action_repeat=4, hist_len=4, ale_seed=100, action_repeat_prob=0,
-				num_eval_episodes=100):
-		self.cap_eval_episodes = cap_eval_episodes
-		self.time_limit = time_limit
-		self.action_repeat = action_repeat
-		self.hist_len = hist_len
-		self.rom = rom
-		self.ale_seed = ale_seed
-		self.action_repeat_prob = action_repeat_prob
-		self.num_eval_episodes = num_eval_episodes
+    def __init__(self, env_name, num_eval_episodes, checkpoint_dir):
+        self.env_name = env_name
+        self.num_eval_episodes = num_eval_episodes
+        self.checkpoint_dir = checkpoint_dir
 
-	def evaluate(self, agent):
-		ale = self.setup_eval_env(self.ale_seed, self.action_repeat_prob, self.rom)
-		self.eval(ale, agent)
+    def evaluate(self, agent):
+        ale = self.setup_eval_env(self.env_name)
+        self.eval(ale, agent)
 
-	def setup_eval_env(self, ale_seed, action_repeat_prob, rom):
-		ale = ALEInterfaceWrapper(action_repeat_prob)
-		#Set the random seed for the ALE
+    def setup_eval_env(self, env_name):
+        if env_name == "spaceinvaders":
+            env_id = "SpaceInvadersNoFrameskip-v4"
+        elif env_name == "mspacman":
+            env_id = "MsPacmanNoFrameskip-v4"
+        elif env_name == "videopinball":
+            env_id = "VideoPinballNoFrameskip-v4"
+        elif env_name == "beamrider":
+            env_id = "BeamRiderNoFrameskip-v4"
+        else:
+            env_id = env_name[0].upper() + env_name[1:] + "NoFrameskip-v4"
+        env_type = "atari"
+        #env id, env type, num envs, and seed
+        env = make_vec_env(env_id, env_type, 1, 0, wrapper_kwargs={'clip_rewards':False,'episode_life':False,})
+        if env_type == 'atari':
+            env = VecFrameStack(env, 4)
+        return env
 
-		ale.setInt('random_seed', ale_seed)
-		'''
-		This sets the probability from the default 0.25 to 0.
-		It ensures deterministic actions.
-		'''
-		ale.setFloat('repeat_action_probability', action_repeat_prob)
-		# Load the ROM file
-		ale.loadROM(rom)
-		return ale
 
-	def eval(self, ale, agent):
-		action_set = ale.getMinimalActionSet()
-		rewards = []
-		# 100 episodes
-		for i in range(100):
-			ale.reset_game()
-			preprocessor = Preprocessor()
-			state = State(self.hist_len)
-			steps = 0
-			utils.perform_no_ops(ale, 30, preprocessor, state)
-			episode_reward = 0
-			while not ale.game_over() and steps < self.time_limit:
-				if np.random.uniform() < 0.01:
-					action = np.random.choice(action_set)
-				else:
-					action = agent.get_action(state.get_state())
-				for _ in range(self.action_repeat):
-					episode_reward += ale.act(action)
-					preprocessor.add(ale.getScreenRGB())
-				state.add_frame(preprocessor.preprocess())
-				steps += 1
-			print "Episode " + str(i) + " reward is " + str(episode_reward)
-			rewards.append(episode_reward)
-		print "Mean reward is: " + str(np.mean(rewards))
+    def eval(self, env, agent):
+        rewards = []
+        # 100 episodes
+        episode_count = self.num_eval_episodes
+        reward = 0
+        done = False
+        rewards = []
+        writer = open(self.checkpoint_dir + "/" +self.env_name + "_bc_results.txt", 'w')
+        for i in range(int(episode_count)):
+            ob = env.reset()
+            steps = 0
+            acc_reward = 0
+            while True:
+                #preprocess the state
+                state = mask_score(normalize_state(ob))
+                state = np.transpose(state, (0, 3, 1, 2))
+                action = agent.get_action(state)
+                ob, reward, done, _ = env.step(action)
+
+                steps += 1
+                acc_reward += reward
+                if done:
+                    print("Episode: {}, Steps: {}, Reward: {}".format(i,steps,acc_reward))
+                    writer.write("{}\n".format(acc_reward[0]))
+                    rewards.append(acc_reward)
+                    break
+
+        print("Mean reward is: " + str(np.mean(rewards)))

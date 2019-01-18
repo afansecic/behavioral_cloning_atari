@@ -17,9 +17,10 @@ class Imitator:
 				hist_len,
 				l2_penalty):
 		self.minimal_action_set = min_action_set
-		self.network = Network(len(self.minimal_action_set))
+		print("hist len", hist_len)
+		self.network = Network(len(self.minimal_action_set), hist_len)
 		if torch.cuda.is_available():
-			print "Initializing Cuda Nets..."
+			print("Initializing Cuda Nets...")
 			self.network.cuda()
 		self.optimizer = optim.Adam(self.network.parameters(),
 		lr=learning_rate, weight_decay=l2_penalty)
@@ -35,17 +36,22 @@ class Imitator:
 
 	def get_action(self, state):
 		vals = self.predict(state)
-		return self.minimal_action_set[np.argmax(vals)]
+		return np.argmax(vals)
 
 	# potentially optimizable
 	def compute_labels(self, sample, minibatch_size):
+		#device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 		labels = Variable(utils.long_tensor(minibatch_size))
-		# The list of ALE actions taken for the minibatch
 		actions_taken = [x.action for x in sample]
-		# The indices of the ALE actions taken in the action set
-		action_indices = [self.minimal_action_set.index(x) for x in actions_taken]
-		for index in range(len(action_indices)):
-			labels[index] = action_indices[index]
+		#print(actions_taken[0])
+		for i in range(len(actions_taken)):
+			#print(actions_taken[i])
+			labels[i] = np.int(actions_taken[i])
+		# The list of ALE actions taken for the minibatch
+		#labels = torch.from_numpy(np.array([x.action for x in sample])).long().to(device)
+		#for index in range(len(actions_taken)):
+		#	labels[index] = torch.from_numpy(actions_taken[index])
+		#print(labels[0])
 		return labels
 
 	def get_loss(self, outputs, labels):
@@ -55,13 +61,13 @@ class Imitator:
 		# sample a minibatch of transitions
 		sample = dataset.sample_minibatch(minibatch_size)
 		state = Variable(utils.float_tensor(np.stack([np.squeeze(x.state) for x in sample])))
-		
+
 		# compute the target values for the minibatch
 		labels = self.compute_labels(sample, minibatch_size)
-
+		#print("labels", labels)
 		self.optimizer.zero_grad()
 		'''
-		Forward pass the minibatch through the 
+		Forward pass the minibatch through the
 		prediction network.
 		'''
 		activations = self.network(state)
@@ -80,9 +86,9 @@ class Imitator:
 	Args:
 	This function checkpoints the network.
 	'''
-	def checkpoint_network(self):
-		print "Checkpointing Weights"
+	def checkpoint_network(self, env_name):
+		print("Checkpointing Weights")
 		utils.save_checkpoint({
 			'state_dict': self.network.state_dict()
-			}, self.checkpoint_directory)
-		print "Checkpointed."
+			}, self.checkpoint_directory, env_name)
+		print("Checkpointed.")
