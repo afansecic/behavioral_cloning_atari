@@ -26,7 +26,8 @@ def mask_score(obs):
     obs[:,:n,:,:] = 0
     return obs
 
-def generate_transitions(env, num_steps = 1000):
+def generate_transitions(env, num_steps = 10000):
+    print("learning inverse transition dynamics")
     if env_name == "spaceinvaders":
         env_id = "SpaceInvadersNoFrameskip-v4"
     elif env_name == "mspacman":
@@ -53,6 +54,8 @@ def generate_transitions(env, num_steps = 1000):
         state = np.transpose(state, (0, 3, 1, 2)).squeeze()
 
         while True:
+            if step_cnt % 1000 == 0:
+                print("generated {} state transitions".format(step_cnt))
             #preprocess the state
             action = env.action_space.sample()
             ob, reward, done, _ = env.step(action)
@@ -74,7 +77,7 @@ def generate_transitions(env, num_steps = 1000):
 
 def generate_novice_demo_observations(env, env_name, agent):
     checkpoint_min = 50
-    checkpoint_max = 300
+    checkpoint_max = 600
     checkpoint_step = 50
     checkpoints = []
     if env_name == "enduro":
@@ -230,7 +233,7 @@ if __name__ == '__main__':
         args.hist_len*2,
         args.discount,
         args.checkpoint_dir,
-        transition_dataset_size*4,
+        transition_dataset_size,
         transition_data, args.num_eval_episodes)
 
 
