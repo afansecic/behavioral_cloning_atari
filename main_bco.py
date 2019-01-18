@@ -9,6 +9,13 @@ from run_test import *
 from torch.autograd import Variable
 import utils
 
+def normalize_state(obs):
+    obs_highs = env.observation_space.high
+    obs_lows = env.observation_space.low
+    #print(obs_highs)
+    #print(obs_lows)
+    #return  2.0 * (obs - obs_lows) / (obs_highs - obs_lows) - 1.0
+    return obs / 255.0
 
 
 
@@ -70,6 +77,8 @@ def generate_transitions(env, num_steps = 1000):
 
 
 def generate_novice_demo_observations(env, env_name, agent):
+    print("generating novice demos")
+
     checkpoint_min = 50
     checkpoint_max = 600
     checkpoint_step = 50
@@ -112,7 +121,7 @@ def generate_novice_demo_observations(env, env_name, agent):
             acc_reward = 0
             while True:
                 action = agent.act(ob, r, done)
-                traj.append(mask_score(ob))
+                traj.append(mask_score(normalize_state(ob)))
                 ob, r, done, _ = env.step(action)
                 #print(ob.shape)
 
@@ -127,7 +136,7 @@ def generate_novice_demo_observations(env, env_name, agent):
             demonstrations.append(traj)
             learning_returns.append(acc_reward)
             learning_rewards.append(gt_rewards)
-    print(np.mean(learning_returns), np.max(learning_returns))
+    print(np.max(learning_returns), np.min(learning_returns), np.mean(learning_returns))
     return demonstrations, learning_returns, learning_rewards
 
 
@@ -152,6 +161,7 @@ if __name__ == '__main__':
     parser.add_argument("--checkpoint-dir", type=str, default="./checkpoints_bco")
     parser.add_argument("--num_eval_episodes", type=int, default = 30)
     parser.add_argument('--seed', default=0, help="random seed for experiments")
+    parser.add_argument('--num_transitions', default=10000, type=int, help="number of random transitoins to generate")
 
     args = parser.parse_args()
     env_name = args.env_name
@@ -173,6 +183,7 @@ if __name__ == '__main__':
     np.random.seed(seed)
     tf.set_random_seed(seed)
 
+
     stochastic = True
 
 
@@ -190,8 +201,17 @@ if __name__ == '__main__':
     env = VecFrameStack(env, 4)
     agent = PPO2Agent(env, env_type, stochastic)
 
+    #The default seed for demonstrations to be the same
+    demonstrations, learning_returns, _ = generate_novice_demo_observations(env, env_name, agent)
+
+    for d in demonstrations:
+        for i in range(len(d)):
+
+            d[i] = (d[i] * 255.).astype(int)
+
+
     #run self play for inverse transition dynamics learning
-    transitions = generate_transitions(env_name)
+    transitions = generate_transitions(env_name, args.num_transitions)
 
     transition_dataset_size = len(transitions)
     print("Transition Data set size = ", transition_dataset_size)
@@ -227,11 +247,9 @@ if __name__ == '__main__':
         args.hist_len*2,
         args.discount,
         args.checkpoint_dir,
-        transition_dataset_size*4,
+        transition_dataset_size*5,
         transition_data, args.num_eval_episodes)
 
-
-    demonstrations, learning_returns, _ = generate_novice_demo_observations(env, env_name, agent)
 
     #TODO:
     #classify the actions of the demonstrations
