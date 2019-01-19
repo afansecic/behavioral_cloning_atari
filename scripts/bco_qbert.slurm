@@ -1,4 +1,4 @@
-intro_launcher= '''#!/bin/bash
+#!/bin/bash
 #
 # Simple SLURM script for submitting multiple serial
 # jobs (e.g. parametric studies) using a script wrapper
@@ -12,14 +12,12 @@ intro_launcher= '''#!/bin/bash
 #-------------------------------------------------------
 # 
 #------------------Scheduler Options--------------------
-'''
-
-schedule_other ='''#SBATCH -N 1                   # Total number of nodes (16 cores/node)
+#SBATCH -J BCO_best_qbert      	# Job name
+#SBATCH -N 1                   # Total number of nodes (16 cores/node)
 #SBATCH -n 1                  # Total number of tasks
 #SBATCH -p gpu          # Queue name
-'''
+#SBATCH -o /work/05933/dsbrown/maverick/output/logs/BCO_best_qbert.o%j  # Name of stdout output file (%j expands to jobid) 
 
-batch_rest = '''
 #SBATCH -t 05:00:00            # Run time (hh:mm:ss)
 #      <------------ Account String ------------>
 # <--- (Use this ONLY if you have MULTIPLE accounts) --->
@@ -45,9 +43,8 @@ module load tacc-singularity
 export TACC_LAUNCHER_PPN=1
 export EXECUTABLE=$TACC_LAUNCHER_DIR/init_launcher
 export WORKDIR=$WORK/Code/behavioral_cloning_atari/
-'''
-
-rest_to_end = ''' 
+export CONTROL_FILE=commands_best_qbert
+ 
 
 # Variable descriptions:
 #
@@ -133,31 +130,3 @@ $TACC_LAUNCHER_DIR/paramrun SLURM $EXECUTABLE $WORKDIR $CONTROL_FILE $PHI_WORKDI
 echo " "
 echo " Parameteric Job Complete"
 echo " "
-'''
-
-
-def create_launch_file(envname):
-
-    
-    schedule_options = "#SBATCH -J BCO_best_" + envname +    "      	# Job name\n"
-    
-    output_name = "#SBATCH -o /work/05933/dsbrown/maverick/output/logs/BCO_best_" + envname + ".o%j  # Name of stdout output file (%j expands to jobid) \n"
-    control_file = "export CONTROL_FILE=commands_best_"+ envname + "\n"
-    
-    launcher_string = intro_launcher + schedule_options + schedule_other + output_name + batch_rest + control_file + rest_to_end
-    print(launcher_string)
-    f = open("bco_" + envname + ".slurm",'w')
-    f.write(launcher_string)
-    f.close()
-        
-    
- 
-envs = ['mspacman', 'videopinball', 'hero', 'beamrider', 'qbert', 'seaquest', 'breakout', 'spaceinvaders', 'pong', 'enduro' ]
-for e in envs:
-    print("+"*20)
-    print(e)
-    print("+"*20)
-    create_launch_file(e)
- 
- 
- 

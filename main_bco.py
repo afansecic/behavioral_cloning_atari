@@ -162,6 +162,8 @@ if __name__ == '__main__':
     parser.add_argument("--num_eval_episodes", type=int, default = 30)
     parser.add_argument('--seed', default=0, help="random seed for experiments")
     parser.add_argument('--num_transitions', default=10000, type=int, help="number of random transitoins to generate")
+    parser.add_argument('--use_best', default=1.0, type=float, help="fraction of best demos to use for BC")
+
 
     args = parser.parse_args()
     env_name = args.env_name
@@ -204,6 +206,15 @@ if __name__ == '__main__':
     #The default seed for demonstrations to be the same
     demonstrations, learning_returns, _ = generate_novice_demo_observations(env, env_name, agent)
 
+    print("choosing best {} percent of demos".format(args.use_best * 100))
+    demonstrations = [x for _, x in sorted(zip(learning_returns,demonstrations), key=lambda pair: pair[0])]
+    start_index = len(demonstrations) - int(len(demonstrations) * args.use_best)
+    demonstrations = demonstrations[start_index:]
+    print(len(demonstrations))
+    for d in demonstrations:
+        print(len(d))
+
+
     for d in demonstrations:
         for i in range(len(d)):
 
@@ -235,7 +246,7 @@ if __name__ == '__main__':
             print("data set full")
             break
     print("available actions", action_set)
-    print(action_cnt_dict)
+    #print(action_cnt_dict)
 
     transition_model = train_transitions(args.env_name,
         action_set,
@@ -251,13 +262,16 @@ if __name__ == '__main__':
         transition_data, args.num_eval_episodes)
 
 
-    #TODO:
+
     #classify the actions of the demonstrations
     #take each consecutive state, next state and concatentate
     #run transition_model.get_action(state) to get action
     #add action
     demonstrations_pred = []
+    cnt = 0
     for d in demonstrations:
+        print("infering actions for demonstration ", cnt)
+        cnt += 1
         for i in range(len(d)-1):
             #add state i and state i + 1 to predict action
             state = np.transpose(np.squeeze(d[i]), (2, 0, 1))
