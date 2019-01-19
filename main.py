@@ -155,6 +155,8 @@ if __name__ == '__main__':
     for d in demonstrations:
         print(len(d))
 
+
+
     dataset_size = sum([len(d) for d in demonstrations])
     print("Data set size = ", dataset_size)
 
@@ -173,7 +175,7 @@ if __name__ == '__main__':
             else:
                 action_cnt_dict[action] = 0
             #transpose into 4x84x84 format
-            state = np.transpose(np.squeeze(state), (2, 0, 1))
+            state = np.transpose(np.squeeze(state), (2, 0, 1))*255.
             data.add_item(state, action)
             num_data += 1
             if num_data == dataset_size:
