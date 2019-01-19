@@ -107,6 +107,7 @@ if __name__ == '__main__':
 	parser.add_argument("--checkpoint-dir", type=str, default="./checkpoints")
 	parser.add_argument("--num_eval_episodes", type=int, default = 30)
 	parser.add_argument('--seed', default=0, help="random seed for experiments")
+    parser.add_argument('--use_best', default=1.0, type=float, help="fraction of best demos to use for BC")
 
 	args = parser.parse_args()
 	env_name = args.env_name
@@ -146,6 +147,13 @@ if __name__ == '__main__':
 	agent = PPO2Agent(env, env_type, stochastic)
 
 	demonstrations, learning_returns, _ = generate_novice_demos(env, env_name, agent)
+    print("choosing best {} percent of demos".format(args.use_best * 100))
+    demonstrations = [x for _, x in sorted(zip(learning_returns,demonstrations), key=lambda pair: pair[0])]
+    start_index = len(demonstrations) - int(len(demonstrations) * args.use_best)
+    demonstrations = demonstrations[start_index:]
+    print(len(demonstrations))
+    for d in demonstrations:
+        print(len(d))
 
 	dataset_size = sum([len(d) for d in demonstrations])
 	print("Data set size = ", dataset_size)
