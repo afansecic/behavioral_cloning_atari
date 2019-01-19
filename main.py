@@ -88,65 +88,65 @@ def generate_novice_demos(env, env_name, agent):
 
 
 if __name__ == '__main__':
-	parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser()
 
-	# ##################################################
-	# ##             Algorithm parameters             ##
-	# ##################################################
-	#parser.add_argument("--dataset-size", type=int, default=75000)
-	#parser.add_argument("--updates", type=int, default=10000)#200000)
-	parser.add_argument("--minibatch-size", type=int, default=32)
-	parser.add_argument("--hist-len", type=int, default=4)
-	parser.add_argument("--discount", type=float, default=0.99)
-	parser.add_argument("--learning-rate", type=float, default=0.00025)
-	parser.add_argument("--env_name", type=str, help="Atari environment name in lowercase, i.e. 'beamrider'")
+    # ##################################################
+    # ##             Algorithm parameters             ##
+    # ##################################################
+    #parser.add_argument("--dataset-size", type=int, default=75000)
+    #parser.add_argument("--updates", type=int, default=10000)#200000)
+    parser.add_argument("--minibatch-size", type=int, default=32)
+    parser.add_argument("--hist-len", type=int, default=4)
+    parser.add_argument("--discount", type=float, default=0.99)
+    parser.add_argument("--learning-rate", type=float, default=0.00025)
+    parser.add_argument("--env_name", type=str, help="Atari environment name in lowercase, i.e. 'beamrider'")
 
-	parser.add_argument("--alpha", type=float, default=0.95)
-	parser.add_argument("--min-squared-gradient", type=float, default=0.01)
-	parser.add_argument("--l2-penalty", type=float, default=0.0001)
-	parser.add_argument("--checkpoint-dir", type=str, default="./checkpoints")
-	parser.add_argument("--num_eval_episodes", type=int, default = 30)
-	parser.add_argument('--seed', default=0, help="random seed for experiments")
+    parser.add_argument("--alpha", type=float, default=0.95)
+    parser.add_argument("--min-squared-gradient", type=float, default=0.01)
+    parser.add_argument("--l2-penalty", type=float, default=0.0001)
+    parser.add_argument("--checkpoint-dir", type=str, default="./checkpoints")
+    parser.add_argument("--num_eval_episodes", type=int, default = 30)
+    parser.add_argument('--seed', default=0, help="random seed for experiments")
     parser.add_argument('--use_best', default=1.0, type=float, help="fraction of best demos to use for BC")
 
-	args = parser.parse_args()
-	env_name = args.env_name
-	if env_name == "spaceinvaders":
-	    env_id = "SpaceInvadersNoFrameskip-v4"
-	elif env_name == "mspacman":
-	    env_id = "MsPacmanNoFrameskip-v4"
-	elif env_name == "videopinball":
-	    env_id = "VideoPinballNoFrameskip-v4"
-	elif env_name == "beamrider":
-	    env_id = "BeamRiderNoFrameskip-v4"
-	else:
-	    env_id = env_name[0].upper() + env_name[1:] + "NoFrameskip-v4"
+    args = parser.parse_args()
+    env_name = args.env_name
+    if env_name == "spaceinvaders":
+        env_id = "SpaceInvadersNoFrameskip-v4"
+    elif env_name == "mspacman":
+        env_id = "MsPacmanNoFrameskip-v4"
+    elif env_name == "videopinball":
+        env_id = "VideoPinballNoFrameskip-v4"
+    elif env_name == "beamrider":
+        env_id = "BeamRiderNoFrameskip-v4"
+    else:
+        env_id = env_name[0].upper() + env_name[1:] + "NoFrameskip-v4"
 
-	env_type = "atari"
-	#set seeds
-	seed = int(args.seed)
-	torch.manual_seed(seed)
-	np.random.seed(seed)
-	tf.set_random_seed(seed)
+    env_type = "atari"
+    #set seeds
+    seed = int(args.seed)
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    tf.set_random_seed(seed)
 
-	stochastic = True
-
-
-	#load novice demonstrations
-	#pkl_file = open("../learning-rewards-of-learners/learner/novice_demos/" + args.env_name + "12_50.pkl", "rb")
-	#novice_data = pickle.load(pkl_file)
-	#env id, env type, num envs, and seed
-	env = make_vec_env(env_id, 'atari', 1, seed,
-	                   wrapper_kwargs={
-	                       'clip_rewards':False,
-	                       'episode_life':False,
-	                   })
+    stochastic = True
 
 
-	env = VecFrameStack(env, 4)
-	agent = PPO2Agent(env, env_type, stochastic)
+    #load novice demonstrations
+    #pkl_file = open("../learning-rewards-of-learners/learner/novice_demos/" + args.env_name + "12_50.pkl", "rb")
+    #novice_data = pickle.load(pkl_file)
+    #env id, env type, num envs, and seed
+    env = make_vec_env(env_id, 'atari', 1, seed,
+                       wrapper_kwargs={
+                           'clip_rewards':False,
+                           'episode_life':False,
+                       })
 
-	demonstrations, learning_returns, _ = generate_novice_demos(env, env_name, agent)
+
+    env = VecFrameStack(env, 4)
+    agent = PPO2Agent(env, env_type, stochastic)
+
+    demonstrations, learning_returns, _ = generate_novice_demos(env, env_name, agent)
     print("choosing best {} percent of demos".format(args.use_best * 100))
     demonstrations = [x for _, x in sorted(zip(learning_returns,demonstrations), key=lambda pair: pair[0])]
     start_index = len(demonstrations) - int(len(demonstrations) * args.use_best)
@@ -155,45 +155,45 @@ if __name__ == '__main__':
     for d in demonstrations:
         print(len(d))
 
-	dataset_size = sum([len(d) for d in demonstrations])
-	print("Data set size = ", dataset_size)
+    dataset_size = sum([len(d) for d in demonstrations])
+    print("Data set size = ", dataset_size)
 
-	data = dataset.Dataset(dataset_size, args.hist_len)
-	episode_index_counter = 0
-	num_data = 0
-	action_set = set()
-	action_cnt_dict = {}
-	for episode in demonstrations:
-		for sa in episode:
-			state, action = sa
-			action = action[0]
-			action_set.add(action)
-			if action in action_cnt_dict:
-				action_cnt_dict[action] += 1
-			else:
-				action_cnt_dict[action] = 0
-			#transpose into 4x84x84 format
-			state = np.transpose(np.squeeze(state), (2, 0, 1))
-			data.add_item(state, action)
-			num_data += 1
-			if num_data == dataset_size:
-				print("data set full")
-				break
-		if num_data == dataset_size:
-			print("data set full")
-			break
-	print("available actions", action_set)
-	print(action_cnt_dict)
+    data = dataset.Dataset(dataset_size, args.hist_len)
+    episode_index_counter = 0
+    num_data = 0
+    action_set = set()
+    action_cnt_dict = {}
+    for episode in demonstrations:
+        for sa in episode:
+            state, action = sa
+            action = action[0]
+            action_set.add(action)
+            if action in action_cnt_dict:
+                action_cnt_dict[action] += 1
+            else:
+                action_cnt_dict[action] = 0
+            #transpose into 4x84x84 format
+            state = np.transpose(np.squeeze(state), (2, 0, 1))
+            data.add_item(state, action)
+            num_data += 1
+            if num_data == dataset_size:
+                print("data set full")
+                break
+        if num_data == dataset_size:
+            print("data set full")
+            break
+    print("available actions", action_set)
+    print(action_cnt_dict)
 
-	train(args.env_name,
-		action_set,
-		args.learning_rate,
-		args.alpha,
-		args.min_squared_gradient,
-		args.l2_penalty,
-		args.minibatch_size,
-		args.hist_len,
-		args.discount,
-		args.checkpoint_dir,
-		dataset_size*3,
-		data, args.num_eval_episodes)
+    train(args.env_name,
+        action_set,
+        args.learning_rate,
+        args.alpha,
+        args.min_squared_gradient,
+        args.l2_penalty,
+        args.minibatch_size,
+        args.hist_len,
+        args.discount,
+        args.checkpoint_dir,
+        dataset_size*3,
+        data, args.num_eval_episodes)
