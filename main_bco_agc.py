@@ -1,10 +1,12 @@
 import torch
+import agc.dataset as ds
 import argparse
 import numpy as np
 from train import train, train_transitions
 from pdb import set_trace
 import dataset
 import tensorflow as tf
+import agc_demos
 from run_test import *
 from torch.autograd import Variable
 import utils
@@ -169,9 +171,13 @@ if __name__ == '__main__':
     parser.add_argument('--seed', default=0, help="random seed for experiments")
     parser.add_argument('--num_transitions', default=20000, type=int, help="number of random transitoins to generate")
     parser.add_argument('--use_best', default=1.0, type=float, help="fraction of best demos to use for BC")
+    parser.add_argument('--datadir', default=None, help='location of atari gc data')
 
 
     args = parser.parse_args()
+    data_dir = args.datadir
+    agc_dataset = ds.AtariDataset(data_dir)
+
     env_name = args.env_name
     if env_name == "spaceinvaders":
         env_id = "SpaceInvadersNoFrameskip-v4"
@@ -210,15 +216,15 @@ if __name__ == '__main__':
     agent = PPO2Agent(env, env_type, stochastic)
 
     #The default seed for demonstrations to be the same
-    demonstrations, learning_returns, _ = generate_novice_demo_observations(env, env_name, agent)
+    #demonstrations, learning_returns, _ = generate_novice_demo_observations(env, env_name, agent)
+    demonstrations, learning_returns = agc_demos.get_preprocessed_trajectories(env_name, agc_dataset, data_dir)
 
     print("choosing best {} percent of demos".format(args.use_best * 100))
     demonstrations = [x for _, x in sorted(zip(learning_returns,demonstrations), key=lambda pair: pair[0])]
     start_index = len(demonstrations) - int(len(demonstrations) * args.use_best)
     demonstrations = demonstrations[start_index:]
-    print(len(demonstrations))
-    for d in demonstrations:
-        print(len(d))
+    print("Using ", len(demonstrations), "demos total")
+
 
 
     for d in demonstrations:
@@ -323,5 +329,5 @@ if __name__ == '__main__':
         args.hist_len,
         args.discount,
         args.checkpoint_dir,
-        dataset_size*4,
+        dataset_size*5,
         data, args.num_eval_episodes)
