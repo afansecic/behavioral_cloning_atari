@@ -4,6 +4,55 @@ from pdb import set_trace
 import os
 import numpy as np
 
+
+def load_human_episode(filename):
+	pass
+
+# made for human data collection api
+class HumanEpisode(object):
+
+	def __init__(self, episode):
+		num_frames = len(episode)
+		self.episode_len = num_frames
+		self.states = np.empty((num_frames, 210, 160, 3), dtype=np.uint8)
+		self.actions = np.empty(num_frames, dtype=np.uint8)
+		self.rewards = np.empty(num_frames)
+		self.game_overs = np.empty(num_frames, dtype=np.bool)
+		self.lives = np.empty(num_frames, dtype=np.uint8)
+
+		# episode is tuple of the form
+		# obs, action, rew, env_done, info, where info stores ale.lives
+		for t in range(num_frames):
+			self.states[t] = episode[t]["state"] # s_t+1
+			self.actions[t] = episode[t]["action"] # a_{t}
+			self.rewards[t] = episode[t]["reward"] # r_{t+1}
+			self.game_overs[t] = episode[t]["game_over"] # s_{t+1}=game_over
+			self.lives[t] = episode[t]["lives"] # lives_{t+1} 
+		self.total_reward = np.sum(self.rewards)
+
+
+	def play_video(self):
+		pass
+
+	def produce_gif(self):
+		pass
+
+	def save(env, episode_id):
+		pass
+
+	def __getitem__(self, index):
+		# I think it assumes preprocessed inputs.
+		assert 1 <= index < self.episode_len
+		state = self.states[index - 1] # s_t
+		action = self.actions[index] # a_t
+		reward = self.rewards[index] # r_{t+1}
+		next_state = self.states[index] # s_{t+1}
+		terminal = self.game_overs[index] # s_{t+1} = terminal
+		lives = self.lives[index] # s_{t+1} = terminal
+		return {'state':state, 'action':action, 
+				'reward':reward, 'next_state':next_state, 'game_over':terminal, 'lives': lives}
+
+
 class Episode(object):
 
 	def __init__(self, start, end, storage_size, offline_dir, hist_len):

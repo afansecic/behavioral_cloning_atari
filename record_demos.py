@@ -2,11 +2,13 @@
 https://github.com/openai/gym/blob/master/gym/utils/play.py
 """
 
+from pdb import set_trace
 import gym
 import pygame
 import matplotlib
 import argparse
 from gym import logger
+from episode_segmentation import HumanEpisode
 try:
     matplotlib.use('TkAgg')
     import matplotlib.pyplot as plt
@@ -104,15 +106,20 @@ def play(env, transpose=True, fps=30, zoom=None, callback=None, keys_to_action=N
     screen = pygame.display.set_mode(video_size)
     clock = pygame.time.Clock()
 
-
+    episodes = []
+    current_episode = []
     while running:
         if env_done:
             env_done = False
             obs = env.reset()
+            if current_episode:
+                episodes.append(current_episode)
+            current_episode = []
         else:
             action = keys_to_action.get(tuple(sorted(pressed_keys)), 0)
             prev_obs = obs
             obs, rew, env_done, info = env.step(action)
+            current_episode.append({"state":obs, "action":action, "reward":rew, "game_over":env_done, "lives":info['ale.lives']})
             if callback is not None:
                 callback(prev_obs, obs, action, rew, env_done, info)
         if obs is not None:
@@ -140,6 +147,7 @@ def play(env, transpose=True, fps=30, zoom=None, callback=None, keys_to_action=N
         pygame.display.flip()
         clock.tick(fps)
     pygame.quit()
+    return episodes
 
 class PlayPlot(object):
     def __init__(self, callback, horizon_timesteps, plot_names):
@@ -179,8 +187,11 @@ def main():
     parser.add_argument('--env', type=str, default='MontezumaRevengeNoFrameskip-v4', help='Define Environment')
     args = parser.parse_args()
     env = gym.make(args.env)
-    play(env, zoom=4, fps=60)
-
+    episodes = play(env, zoom=4, fps=60)
+    human_episodes = []
+    for episode in episodes:
+        human_episodes.append(HumanEpisode(episode))
+    set_trace()
 
 if __name__ == '__main__':
     main()
