@@ -3,7 +3,7 @@ from offline_storage import StorageBuffer
 from pdb import set_trace
 import os
 import numpy as np
-
+import cv2
 
 def load_human_episode(filename):
 	pass
@@ -14,6 +14,9 @@ class HumanEpisode(object):
 	def __init__(self, episode):
 		num_frames = len(episode)
 		self.episode_len = num_frames
+		self.height = 210
+		self.width = 160
+		self.channels = 3
 		self.states = np.empty((num_frames, 210, 160, 3), dtype=np.uint8)
 		self.actions = np.empty(num_frames, dtype=np.uint8)
 		self.rewards = np.empty(num_frames)
@@ -30,6 +33,24 @@ class HumanEpisode(object):
 			self.lives[t] = episode[t]["lives"] # lives_{t+1} 
 		self.total_reward = np.sum(self.rewards)
 
+	def make_video(self):
+		# Used code from : http://tsaith.github.io/combine-images-into-a-video-with-python-3-and-opencv-3.html
+		# Define the codec and create VideoWriter object
+		fourcc = cv2.VideoWriter_fourcc(*'mp4v') # Be sure to use lower case
+		output = 'output.mp4'
+		# fps
+		out = cv2.VideoWriter(output, fourcc, 60.0, (self.width, self.height))
+		# out = cv2.VideoWriter(output, fourcc, 60, (self.width, self.height, self.channels), True)
+		for i in range(self.states.shape[0]):
+		    state = self.states[i]
+		    out.write(state) # Write out frame to video
+		    cv2.imshow('video',state)
+		    if (cv2.waitKey(1) & 0xFF) == ord('q'): # Hit `q` to exit
+		        break
+
+		# Release everything if job is finished
+		out.release()
+		cv2.destroyAllWindows()
 
 	def play_video(self):
 		pass

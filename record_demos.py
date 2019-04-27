@@ -191,7 +191,8 @@ def main():
     human_episodes = []
     for episode in episodes:
         human_episodes.append(HumanEpisode(episode))
-    set_trace()
+    for human_episode in human_episodes:
+        human_episode.make_video()
 
 if __name__ == '__main__':
     main()
