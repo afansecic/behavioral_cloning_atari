@@ -53,7 +53,8 @@ class HumanEpisode(object):
 
 	def save(self, env, episode_id):
 		directory = "demos/" + str(env) + "/"
-		os.makedirs(directory)
+		if not os.path.exists(directory):
+			os.makedirs(directory)
 		np.save(os.path.join(directory, "states" + str(episode_id)), self.states)
 		np.save(os.path.join(directory, "actions" + str(episode_id)), self.actions)
 		np.save(os.path.join(directory, "rewards" + str(episode_id)), self.rewards)

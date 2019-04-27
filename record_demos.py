@@ -18,6 +18,7 @@ except ImportError as e:
 
 from collections import deque
 from pygame.locals import VIDEORESIZE
+import os
 
 def display_arr(screen, arr, video_size, transpose):
     arr_min, arr_max = arr.min(), arr.max()
@@ -191,10 +192,13 @@ def main():
     human_episodes = []
     for episode in episodes:
         human_episodes.append(HumanEpisode(episode))
+    video_dir = "videos/" + str(args.env) + "/"
+    if not os.path.exists(video_dir):
+        os.makedirs(video_dir)
     domain = args.env.replace("NoFrameskip-v4", "")
     for i in range(len(human_episodes)):
         human_episode = human_episodes[i]
-        human_episode.make_video(domain + str(i) + ".avi")
+        human_episode.make_video(video_dir + domain + str(i) + ".avi")
         human_episode.save(args.env, i)
 
 if __name__ == '__main__':
