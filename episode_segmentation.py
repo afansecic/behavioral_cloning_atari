@@ -33,18 +33,17 @@ class HumanEpisode(object):
 			self.lives[t] = episode[t]["lives"] # lives_{t+1} 
 		self.total_reward = np.sum(self.rewards)
 
-	def make_video(self):
+	def make_video(self, output):
 		# Used code from : http://tsaith.github.io/combine-images-into-a-video-with-python-3-and-opencv-3.html
 		# Define the codec and create VideoWriter object
-		fourcc = cv2.VideoWriter_fourcc(*'mp4v') # Be sure to use lower case
-		output = 'output.mp4'
+		fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
 		# fps
 		out = cv2.VideoWriter(output, fourcc, 60.0, (self.width, self.height))
 		# out = cv2.VideoWriter(output, fourcc, 60, (self.width, self.height, self.channels), True)
 		for i in range(self.states.shape[0]):
-		    state = self.states[i]
+		    state = np.flip(self.states[i], axis=2)
 		    out.write(state) # Write out frame to video
-		    cv2.imshow('video',state)
+		    cv2.imshow('video', state)
 		    if (cv2.waitKey(1) & 0xFF) == ord('q'): # Hit `q` to exit
 		        break
 
@@ -52,17 +51,16 @@ class HumanEpisode(object):
 		out.release()
 		cv2.destroyAllWindows()
 
-	def play_video(self):
-		pass
-
-	def produce_gif(self):
-		pass
-
-	def save(env, episode_id):
-		pass
+	def save(self, env, episode_id):
+		directory = "demos/" + str(env) + "/"
+		os.makedirs(directory)
+		np.save(os.path.join(directory, "states" + str(episode_id)), self.states)
+		np.save(os.path.join(directory, "actions" + str(episode_id)), self.actions)
+		np.save(os.path.join(directory, "rewards" + str(episode_id)), self.rewards)
+		np.save(os.path.join(directory, "game_overs" + str(episode_id)), self.game_overs)
+		np.save(os.path.join(directory, "lives" + str(episode_id)), self.lives)
 
 	def __getitem__(self, index):
-		# I think it assumes preprocessed inputs.
 		assert 1 <= index < self.episode_len
 		state = self.states[index - 1] # s_t
 		action = self.actions[index] # a_t
