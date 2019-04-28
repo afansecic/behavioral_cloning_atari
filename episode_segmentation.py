@@ -3,6 +3,75 @@ from offline_storage import StorageBuffer
 from pdb import set_trace
 import os
 import numpy as np
+import cv2
+
+def load_human_episode(filename):
+	pass
+
+# made for human data collection api
+class HumanEpisode(object):
+
+	def __init__(self, episode):
+		num_frames = len(episode)
+		self.episode_len = num_frames
+		self.height = 210
+		self.width = 160
+		self.channels = 3
+		self.states = np.empty((num_frames, 210, 160, 3), dtype=np.uint8)
+		self.actions = np.empty(num_frames, dtype=np.uint8)
+		self.rewards = np.empty(num_frames)
+		self.game_overs = np.empty(num_frames, dtype=np.bool)
+		self.lives = np.empty(num_frames, dtype=np.uint8)
+
+		# episode is tuple of the form
+		# obs, action, rew, env_done, info, where info stores ale.lives
+		for t in range(num_frames):
+			self.states[t] = episode[t]["state"] # s_t+1
+			self.actions[t] = episode[t]["action"] # a_{t}
+			self.rewards[t] = episode[t]["reward"] # r_{t+1}
+			self.game_overs[t] = episode[t]["game_over"] # s_{t+1}=game_over
+			self.lives[t] = episode[t]["lives"] # lives_{t+1} 
+		self.total_reward = np.sum(self.rewards)
+
+	def make_video(self, output):
+		# Used code from : http://tsaith.github.io/combine-images-into-a-video-with-python-3-and-opencv-3.html
+		# Define the codec and create VideoWriter object
+		fourcc = cv2.VideoWriter_fourcc('M','J','P','G')
+		# fps
+		out = cv2.VideoWriter(output, fourcc, 60.0, (self.width, self.height))
+		# out = cv2.VideoWriter(output, fourcc, 60, (self.width, self.height, self.channels), True)
+		for i in range(self.states.shape[0]):
+		    state = np.flip(self.states[i], axis=2)
+		    out.write(state) # Write out frame to video
+		    cv2.imshow('video', state)
+		    if (cv2.waitKey(1) & 0xFF) == ord('q'): # Hit `q` to exit
+		        break
+
+		# Release everything if job is finished
+		out.release()
+		cv2.destroyAllWindows()
+
+	def save(self, env, episode_id):
+		directory = "demos/" + str(env) + "/"
+		if not os.path.exists(directory):
+			os.makedirs(directory)
+		np.save(os.path.join(directory, "states" + str(episode_id)), self.states)
+		np.save(os.path.join(directory, "actions" + str(episode_id)), self.actions)
+		np.save(os.path.join(directory, "rewards" + str(episode_id)), self.rewards)
+		np.save(os.path.join(directory, "game_overs" + str(episode_id)), self.game_overs)
+		np.save(os.path.join(directory, "lives" + str(episode_id)), self.lives)
+
+	def __getitem__(self, index):
+		assert 1 <= index < self.episode_len
+		state = self.states[index - 1] # s_t
+		action = self.actions[index] # a_t
+		reward = self.rewards[index] # r_{t+1}
+		next_state = self.states[index] # s_{t+1}
+		terminal = self.game_overs[index] # s_{t+1} = terminal
+		lives = self.lives[index] # s_{t+1} = terminal
+		return {'state':state, 'action':action, 
+				'reward':reward, 'next_state':next_state, 'game_over':terminal, 'lives': lives}
+
 
 class Episode(object):
 
