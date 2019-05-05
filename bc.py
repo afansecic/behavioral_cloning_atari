@@ -87,9 +87,30 @@ class Imitator:
 	Args:
 	This function checkpoints the network.
 	'''
-	def checkpoint_network(self, env_name):
+	def checkpoint_network(self, env_name, extra_info):
 		print("Checkpointing Weights")
 		utils.save_checkpoint({
 			'state_dict': self.network.state_dict()
-			}, self.checkpoint_directory, env_name)
+			}, self.checkpoint_directory, env_name, extra_info)
 		print("Checkpointed.")
+
+
+class Clone:
+	def __init__(self, min_action_set, hist_len, checkpoint_policy):
+		self.minimal_action_set = min_action_set
+		print("hist len", hist_len)
+		self.network = Network(len(self.minimal_action_set), hist_len)
+		self.network.load_state_dict(torch.load(checkpoint_policy)['state_dict'])
+		if torch.cuda.is_available():
+			print("Initializing Cuda Nets...")
+			self.network.cuda()
+
+	def predict(self, state):
+		# predict action probabilities
+		outputs = self.network(Variable(utils.float_tensor(state)))
+		vals = outputs[len(outputs) - 1].data.cpu().numpy()
+		return vals
+
+	def get_action(self, state):
+		vals = self.predict(state)
+		return np.argmax(vals)

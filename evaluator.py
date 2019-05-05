@@ -10,6 +10,7 @@ from baselines.common.cmd_util import make_vec_env
 from baselines.common.vec_env.vec_frame_stack import VecFrameStack
 from baselines.common.vec_env.vec_normalize import VecNormalize
 from baselines.common.vec_env.vec_video_recorder import VecVideoRecorder
+from baselines.common.trex_utils import preprocess
 
 def normalize_state(obs):
     #obs_highs = env.observation_space.high
@@ -29,14 +30,15 @@ def mask_score(obs):
 
 class Evaluator:
 
-    def __init__(self, env_name, num_eval_episodes, checkpoint_dir):
+    def __init__(self, env_name, num_eval_episodes, checkpoint_dir, epsilon_greedy):
         self.env_name = env_name
         self.num_eval_episodes = num_eval_episodes
         self.checkpoint_dir = checkpoint_dir
+        self.epsilon_greedy = epsilon_greedy
 
     def evaluate(self, agent):
         ale = self.setup_eval_env(self.env_name)
-        self.eval(ale, agent)
+        self.eval(ale, self.env_name, agent)
 
     def setup_eval_env(self, env_name):
         if env_name == "spaceinvaders":
@@ -57,7 +59,7 @@ class Evaluator:
         return env
 
 
-    def eval(self, env, agent):
+    def eval(self, env, env_name, agent):
         rewards = []
         # 100 episodes
         episode_count = self.num_eval_episodes
@@ -71,9 +73,14 @@ class Evaluator:
             acc_reward = 0
             while True:
                 #preprocess the state
-                state = mask_score(normalize_state(ob))
+                state = preprocess(ob, env_name)
                 state = np.transpose(state, (0, 3, 1, 2))
-                action = agent.get_action(state)
+                if np.random.rand() < self.epsilon_greedy:
+                    #print('eps greedy action')
+                    action = env.action_space.sample()
+                else:
+                    #print('policy action')
+                    action = agent.get_action(state)
                 ob, reward, done, _ = env.step(action)
 
                 steps += 1

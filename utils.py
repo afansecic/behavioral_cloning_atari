@@ -5,8 +5,8 @@ import numpy as np
 checkpointing source:
 https://blog.floydhub.com/checkpointing-tutorial-for-tensorflow-keras-and-pytorch/
 '''
-def save_checkpoint(state, checkpoint_dir, env_name):
-	filename = checkpoint_dir + '/' + env_name + '_network.pth.tar'
+def save_checkpoint(state, checkpoint_dir, env_name, extra_info):
+	filename = checkpoint_dir + '/' + env_name +'_' + extra_info + '_network.pth.tar'
 	print("Saving checkpoint at " + filename + " ...")
 	torch.save(state, filename)  # save checkpoint
 	print("Saved checkpoint.")

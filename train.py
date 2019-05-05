@@ -39,7 +39,9 @@ def train(env_name,
 		checkpoint_dir,
 		updates,
 		dataset,
-		num_eval_episodes):
+		num_eval_episodes,
+		epsilon_greedy,
+		extra_info):
 
 	# create DQN agent
 	agent = Imitator(list(minimal_action_set),
@@ -64,7 +66,7 @@ def train(env_name,
 		running_loss += l
 		update += 1
 	print("Training completed.")
-	agent.checkpoint_network(env_name)
+	agent.checkpoint_network(env_name, extra_info)
 	#Plot losses
 	losses = []
 	for loss in agent.losses:
@@ -72,7 +74,7 @@ def train(env_name,
 	plot(losses, checkpoint_dir, env_name)
 	#Evaluation
 	print("beginning evaluation")
-	evaluator = Evaluator(env_name, num_eval_episodes, checkpoint_dir)
+	evaluator = Evaluator(env_name, num_eval_episodes, checkpoint_dir, epsilon_greedy)
 	evaluator.evaluate(agent)
 
 def train_transitions(env_name,
