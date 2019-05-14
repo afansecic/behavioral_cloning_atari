@@ -31,7 +31,6 @@ def train(env_name,
 		minimal_action_set,
 		learning_rate,
 		alpha,
-		min_squared_gradient,
 		l2_penalty,
 		minibatch_size,
 		hist_len,
@@ -47,7 +46,6 @@ def train(env_name,
 	agent = Imitator(list(minimal_action_set),
 				learning_rate,
 				alpha,
-				min_squared_gradient,
 				checkpoint_dir,
 				hist_len,
 				l2_penalty)
@@ -76,12 +74,12 @@ def train(env_name,
 	print("beginning evaluation")
 	evaluator = Evaluator(env_name, num_eval_episodes, checkpoint_dir, epsilon_greedy)
 	evaluator.evaluate(agent)
+	return agent
 
 def train_transitions(env_name,
 		minimal_action_set,
 		learning_rate,
 		alpha,
-		min_squared_gradient,
 		l2_penalty,
 		minibatch_size,
 		hist_len,
@@ -95,7 +93,6 @@ def train_transitions(env_name,
 	agent = Imitator(list(minimal_action_set),
 				learning_rate,
 				alpha,
-				min_squared_gradient,
 				checkpoint_dir,
 				hist_len,
 				l2_penalty)

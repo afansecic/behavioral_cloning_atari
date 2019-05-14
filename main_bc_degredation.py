@@ -9,7 +9,7 @@ from run_test import *
 from baselines.common.trex_utils import preprocess
 
 def generate_novice_demos(env, env_name, agent, model_dir):
-    checkpoint_min = 50
+    checkpoint_min = 550
     checkpoint_max = 600
     checkpoint_step = 50
     checkpoints = []
@@ -144,7 +144,6 @@ if __name__ == '__main__':
     parser.add_argument('--models_dir', default = "/home/dsbrown/Code/learning-rewards-of-learners/learner/", help="top directory where checkpoint models for demos are stored")
 
     parser.add_argument("--alpha", type=float, default=0.95)
-    parser.add_argument("--min-squared-gradient", type=float, default=0.01)
     parser.add_argument("--l2-penalty", type=float, default=0.00)
     parser.add_argument("--checkpoint-dir", type=str, default="./checkpoints")
     parser.add_argument("--num_eval_episodes", type=int, default = 30)
@@ -227,7 +226,6 @@ if __name__ == '__main__':
         action_set,
         args.learning_rate,
         args.alpha,
-        args.min_squared_gradient,
         args.l2_penalty,
         args.minibatch_size,
         args.hist_len,

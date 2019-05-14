@@ -12,7 +12,6 @@ class Imitator:
 	def __init__(self, min_action_set,
 				learning_rate,
 				alpha,
-				min_squared_gradient,
 				checkpoint_dir,
 				hist_len,
 				l2_penalty):
