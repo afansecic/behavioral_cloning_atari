@@ -72,7 +72,9 @@ def generate_demos(env, env_name, agent, checkpoint_path, num_demos):
 
 
 #Takes as input a list of lists of demonstrations where first list is lowest ranked and last list is highest ranked
-def create_training_data_from_bins(ranked_demons, num_snippets, min_snippet_length, max_snippet_length):
+def create_training_data_from_bins(_ranked_demos, num_snippets, min_snippet_length, max_snippet_length):
+
+
     step = 2
     #n_train = 3000 #number of pairs of trajectories to create
     #snippet_length = 50
@@ -151,23 +153,23 @@ class Net(nn.Module):
         '''calculate cumulative return of trajectory'''
         sum_rewards = 0
         sum_abs_rewards = 0
-        for x in traj:
-            x = x.permute(0,3,1,2) #get into NCHW format
-            #compute forward pass of reward network
-            x = F.leaky_relu(self.conv1(x))
-            x = F.leaky_relu(self.conv2(x))
-            x = F.leaky_relu(self.conv3(x))
-            x = F.leaky_relu(self.conv4(x))
-            x = x.view(-1, 784)
-            #x = x.view(-1, 1936)
-            x = F.leaky_relu(self.fc1(x))
-            #r = torch.tanh(self.fc2(x)) #clip reward?
-            r = self.fc2(x)
-            sum_rewards += r
-            sum_abs_rewards += torch.abs(r)
+        #print(traj.shape)
+        x = traj.permute(0,3,1,2) #get into NCHW format
+        #compute forward pass of reward network
+        x = F.leaky_relu(self.conv1(x))
+        x = F.leaky_relu(self.conv2(x))
+        x = F.leaky_relu(self.conv3(x))
+        x = F.leaky_relu(self.conv4(x))
+        x = x.view(-1, 784)
+        #x = x.view(-1, 1936)
+        x = F.leaky_relu(self.fc1(x))
+        #r = torch.tanh(self.fc2(x)) #clip reward?
+        r = self.fc2(x)
+        sum_rewards += torch.sum(r)
+        sum_abs_rewards += torch.sum(torch.abs(r))
         ##    y = self.scalar(torch.ones(1))
         ##    sum_rewards += y
-        #print(sum_rewards)
+        #print("sum rewards", sum_rewards)
         return sum_rewards, sum_abs_rewards
 
 
@@ -178,14 +180,9 @@ class Net(nn.Module):
         cum_r_i, abs_r_i = self.cum_return(traj_i)
         cum_r_j, abs_r_j = self.cum_return(traj_j)
         #print(abs_r_i + abs_r_j)
-        return torch.cat([cum_r_i, cum_r_j]), abs_r_i + abs_r_j
+        return torch.cat((cum_r_i.unsqueeze(0), cum_r_j.unsqueeze(0)),0), abs_r_i + abs_r_j
 
 
-
-
-# Now we train the network. I'm just going to do it one by one for now. Could adapt it for minibatches to get better gradients
-
-# In[111]:
 
 
 def learn_reward(reward_network, optimizer, training_inputs, training_outputs, num_iter, l1_reg, checkpoint_dir):
@@ -202,7 +199,7 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, n
         training_obs, training_labels = zip(*training_data)
         for i in range(len(training_labels)):
             traj_i, traj_j = training_obs[i]
-            labels = np.array([[training_labels[i]]])
+            labels = np.array([training_labels[i]])
             traj_i = np.array(traj_i)
             traj_j = np.array(traj_j)
             traj_i = torch.from_numpy(traj_i).float().to(device)
@@ -214,17 +211,25 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, n
 
             #forward + backward + optimize
             outputs, abs_rewards = reward_network.forward(traj_i, traj_j)
+            #print(outputs[0], outputs[1])
+            #print(labels.item())
             outputs = outputs.unsqueeze(0)
-            #print(outputs)
-            #print(labels)
+            #print("outputs", outputs)
+            #print("labels", labels)
             loss = loss_criterion(outputs, labels) + l1_reg * abs_rewards
+            # if labels == 0:
+            #     #print("label 0")
+            #     loss = torch.log(1 + torch.exp(outputs[1] - outputs[0]))
+            # else:
+            #     #print("label 1")
+            #     loss = torch.log(1 + torch.exp(outputs[0] - outputs[1]))
             loss.backward()
             optimizer.step()
 
             #print stats to see if learning
             item_loss = loss.item()
             cum_loss += item_loss
-            if i % 100 == 99:
+            if i % 1000 == 999:
                 #print(i)
                 print("epoch {}:{} loss {}".format(epoch,i, cum_loss))
                 print(abs_rewards)
@@ -232,6 +237,7 @@ def learn_reward(reward_network, optimizer, training_inputs, training_outputs, n
                 print("check pointing")
                 torch.save(reward_net.state_dict(), checkpoint_dir)
     print("finished training")
+
 
 
 
@@ -281,15 +287,16 @@ def predict_traj_return(net, traj):
     return sum(predict_reward_sequence(net, traj))
 
 
+
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument('--env_name', default='', help='Select the environment name to run, i.e. pong')
     parser.add_argument('--reward_model_path', default='', help="name and location for learned model params")
     parser.add_argument('--seed', default=0, help="random seed for experiments")
     parser.add_argument('--models_dir', default = ".", help="top directory where checkpoint models for demos are stored")
-    parser.add_argument("--num_eval_episodes", type=int, default = 10)
+    parser.add_argument("--num_eval_episodes", type=int, default =2, help="number of epsilon greedy BC demos to generate")
     parser.add_argument("--checkpoint_path", help="path to checkpoint to run agent for demos")
-    parser.add_argument("--num_demos", help="number of demos to generate", default=5, type=int)
+    parser.add_argument("--num_demos", help="number of demos to generate", default=2, type=int)
 
     parser.add_argument("--minibatch-size", type=int, default=32)
     parser.add_argument("--hist-len", type=int, default=4)
@@ -324,17 +331,17 @@ if __name__=="__main__":
     print("Training reward for", env_id)
     #n_train = 200 #number of pairs of trajectories to create
     #snippet_length = 50 #length of trajectory for training comparison
-    lr = 0.0001
-    weight_decay = 0.001
-    num_iter = 3 #num times through training data
-    l1_reg=0.0
+    lr = 0.00005
+    weight_decay = 0.0
+    num_iter = 2 #num times through training data
+    l1_reg=0.001
     stochastic = True
     bin_width = 0 #only bin things that have the same score
-    num_snippets = 3000
+    num_snippets = 1000
     min_snippet_length = 50
     max_snippet_length = 100
     extra_checkpoint_info = "novice_demos"  #for finding checkpoint again
-    epsilon_greedy_list = [1.0, 0.2, 0.01]#[1.0, 0.5, 0.3, 0.1, 0.01]
+    epsilon_greedy_list = [1.0]#, 0.4, 0.2, 0.1]#[1.0, 0.5, 0.3, 0.1, 0.01]
 
 
 
@@ -403,7 +410,7 @@ if __name__=="__main__":
         args.checkpoint_dir,
         dataset_size*2,
         data, args.num_eval_episodes,
-        0.001,
+        0.01,
         extra_checkpoint_info)
 
     #minimal_action_set = acion_set
@@ -421,6 +428,20 @@ if __name__=="__main__":
             traj.append(s)
         demo_demos.append(traj)
     ranked_demos.append(demo_demos)
+
+    #remove the extra first dimension on the observations
+    _ranked_demos = ranked_demos
+    ranked_demos = []
+    for _r in _ranked_demos:
+        r = []
+        for _d in _r:
+            d = []
+            for _ob in _d:
+                ob = _ob[0]
+                d.append(ob)
+            r.append(d)
+        ranked_demos.append(r)
+
     print("Learning from ", len(ranked_demos), "synthetically ranked batches of demos")
 
     training_obs, training_labels = create_training_data_from_bins(ranked_demos, num_snippets, min_snippet_length, max_snippet_length)
