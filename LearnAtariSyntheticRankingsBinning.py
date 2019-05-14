@@ -294,9 +294,11 @@ if __name__=="__main__":
     parser.add_argument('--reward_model_path', default='', help="name and location for learned model params")
     parser.add_argument('--seed', default=0, help="random seed for experiments")
     parser.add_argument('--models_dir', default = ".", help="top directory where checkpoint models for demos are stored")
-    parser.add_argument("--num_eval_episodes", type=int, default =2, help="number of epsilon greedy BC demos to generate")
+    parser.add_argument("--num_bc_eval_episodes", type=int, default =0, help="number of epsilon greedy BC demos to generate")
+    parser.add_argument("--num_epsilon_greedy_demos", type=int, default=2, help="number of times to generate rollouts from each noise level")
     parser.add_argument("--checkpoint_path", help="path to checkpoint to run agent for demos")
     parser.add_argument("--num_demos", help="number of demos to generate", default=2, type=int)
+    parser.add_argument("--num_bc_steps", default = 10000, type=int, help='number of steps of BC to run')
 
     parser.add_argument("--minibatch-size", type=int, default=32)
     parser.add_argument("--hist-len", type=int, default=4)
@@ -334,10 +336,10 @@ if __name__=="__main__":
     lr = 0.00005
     weight_decay = 0.0
     num_iter = 2 #num times through training data
-    l1_reg=0.001
+    l1_reg=0.00001
     stochastic = True
     bin_width = 0 #only bin things that have the same score
-    num_snippets = 1000
+    num_snippets = 10000
     min_snippet_length = 50
     max_snippet_length = 100
     extra_checkpoint_info = "novice_demos"  #for finding checkpoint again
@@ -408,8 +410,8 @@ if __name__=="__main__":
         args.hist_len,
         args.discount,
         args.checkpoint_dir,
-        dataset_size*2,
-        data, args.num_eval_episodes,
+        args.num_bc_steps,
+        data, args.num_bc_eval_episodes,
         0.01,
         extra_checkpoint_info)
 
@@ -417,7 +419,7 @@ if __name__=="__main__":
 
     #agent = Clone(list(minimal_action_set), hist_length, args.checkpoint_bc_policy)
     print("beginning evaluation")
-    generator = DemoGenerator(agent, args.env_name, args.num_eval_episodes, args.seed)
+    generator = DemoGenerator(agent, args.env_name, args.num_epsilon_greedy_demos, args.seed)
     ranked_demos = generator.get_pseudo_rankings(epsilon_greedy_list)
 
     ## Add the demonstrators demos as the highest ranked batch of trajectories, don't need actions
