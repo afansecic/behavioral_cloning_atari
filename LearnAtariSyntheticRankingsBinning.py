@@ -67,7 +67,8 @@ def generate_demos(env, env_name, agent, checkpoint_path, num_demos):
         print("demo length", len(demonstrations))
         demonstrations.append(traj)
         learning_returns.append(acc_reward)
-    print(np.mean(learning_returns), np.max(learning_returns))
+    print("Mean", np.mean(learning_returns), "Max", np.max(learning_returns))
+
     return demonstrations, learning_returns
 
 
@@ -294,11 +295,11 @@ if __name__=="__main__":
     parser.add_argument('--reward_model_path', default='', help="name and location for learned model params")
     parser.add_argument('--seed', default=0, help="random seed for experiments")
     parser.add_argument('--models_dir', default = ".", help="top directory where checkpoint models for demos are stored")
-    parser.add_argument("--num_bc_eval_episodes", type=int, default =0, help="number of epsilon greedy BC demos to generate")
-    parser.add_argument("--num_epsilon_greedy_demos", type=int, default=2, help="number of times to generate rollouts from each noise level")
+    parser.add_argument("--num_bc_eval_episodes", type=int, default = 5, help="number of epsilon greedy BC demos to generate")
+    parser.add_argument("--num_epsilon_greedy_demos", type=int, default=10, help="number of times to generate rollouts from each noise level")
     parser.add_argument("--checkpoint_path", help="path to checkpoint to run agent for demos")
-    parser.add_argument("--num_demos", help="number of demos to generate", default=2, type=int)
-    parser.add_argument("--num_bc_steps", default = 10000, type=int, help='number of steps of BC to run')
+    parser.add_argument("--num_demos", help="number of demos to generate", default=10, type=int)
+    parser.add_argument("--num_bc_steps", default = 12000, type=int, help='number of steps of BC to run')
 
     parser.add_argument("--minibatch-size", type=int, default=32)
     parser.add_argument("--hist-len", type=int, default=4)
@@ -343,17 +344,11 @@ if __name__=="__main__":
     min_snippet_length = 50
     max_snippet_length = 100
     extra_checkpoint_info = "novice_demos"  #for finding checkpoint again
-    epsilon_greedy_list = [1.0]#, 0.4, 0.2, 0.1]#[1.0, 0.5, 0.3, 0.1, 0.01]
+    epsilon_greedy_list = [1.0, 0.1]#, 0.4, 0.2, 0.1]#[1.0, 0.5, 0.3, 0.1, 0.01]
 
 
 
     hist_length = 4
-
-    print("NEED TO NOT HARD CODE MINIMAL ACTION SET!!")
-    #TODO: minimal action set from env
-    minimal_action_set = [0,1,2,3]
-
-
 
 
     #env id, env type, num envs, and seed
