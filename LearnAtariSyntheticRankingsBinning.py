@@ -299,7 +299,7 @@ if __name__=="__main__":
     parser.add_argument("--num_epsilon_greedy_demos", type=int, default=10, help="number of times to generate rollouts from each noise level")
     parser.add_argument("--checkpoint_path", help="path to checkpoint to run agent for demos")
     parser.add_argument("--num_demos", help="number of demos to generate", default=10, type=int)
-    parser.add_argument("--num_bc_steps", default = 20000, type=int, help='number of steps of BC to run')
+    parser.add_argument("--num_bc_steps", default = 50000, type=int, help='number of steps of BC to run')
 
     parser.add_argument("--minibatch-size", type=int, default=32)
     parser.add_argument("--hist-len", type=int, default=4)
