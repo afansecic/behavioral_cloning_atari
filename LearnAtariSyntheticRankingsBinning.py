@@ -299,7 +299,7 @@ if __name__=="__main__":
     parser.add_argument("--num_epsilon_greedy_demos", type=int, default=10, help="number of times to generate rollouts from each noise level")
     parser.add_argument("--checkpoint_path", help="path to checkpoint to run agent for demos")
     parser.add_argument("--num_demos", help="number of demos to generate", default=10, type=int)
-    parser.add_argument("--num_bc_steps", default = 15000, type=int, help='number of steps of BC to run')
+    parser.add_argument("--num_bc_steps", default = 20000, type=int, help='number of steps of BC to run')
 
     parser.add_argument("--minibatch-size", type=int, default=32)
     parser.add_argument("--hist-len", type=int, default=4)
@@ -340,11 +340,11 @@ if __name__=="__main__":
     l1_reg=0.00001
     stochastic = True
     bin_width = 0 #only bin things that have the same score
-    num_snippets = 10000
+    num_snippets = 30000
     min_snippet_length = 50
     max_snippet_length = 100
     extra_checkpoint_info = "novice_demos"  #for finding checkpoint again
-    epsilon_greedy_list = [1.0, 0.1]#, 0.4, 0.2, 0.1]#[1.0, 0.5, 0.3, 0.1, 0.01]
+    epsilon_greedy_list = [1.0,0.5,0.25,0.125,0.0625]#, 0.4, 0.2, 0.1]#[1.0, 0.5, 0.3, 0.1, 0.01]
 
 
 
