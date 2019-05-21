@@ -344,7 +344,7 @@ if __name__=="__main__":
     min_snippet_length = 50
     max_snippet_length = 100
     extra_checkpoint_info = "novice_demos"  #for finding checkpoint again
-    epsilon_greedy_list = [1.0,0.4,0.1]#, 0.4, 0.2, 0.1]#[1.0, 0.5, 0.3, 0.1, 0.01]
+    epsilon_greedy_list = [1.0,0.5,0.2]#, 0.4, 0.2, 0.1]#[1.0, 0.5, 0.3, 0.1, 0.01]
 
 
 
