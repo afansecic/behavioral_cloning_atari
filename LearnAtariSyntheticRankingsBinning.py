@@ -165,7 +165,8 @@ class Net(nn.Module):
         #x = x.view(-1, 1936)
         x = F.leaky_relu(self.fc1(x))
         #r = torch.tanh(self.fc2(x)) #clip reward?
-        r = F.celu(self.fc2(x))
+        #r = F.celu(self.fc2(x))
+        r = self.fc2(x)
         sum_rewards += torch.sum(r)
         sum_abs_rewards += torch.sum(torch.abs(r))
         ##    y = self.scalar(torch.ones(1))
@@ -335,8 +336,8 @@ if __name__=="__main__":
     #n_train = 200 #number of pairs of trajectories to create
     #snippet_length = 50 #length of trajectory for training comparison
     lr = 0.00001
-    weight_decay = 0.0001
-    num_iter = 4 #num times through training data
+    weight_decay = 0.0
+    num_iter = 2 #num times through training data
     l1_reg=0.0
     stochastic = True
     bin_width = 0 #only bin things that have the same score
