@@ -56,7 +56,7 @@ def train(env_name,
     log_num = log_frequency
     update = 1
     running_loss = 0.
-    best_v_loss = 1000.0
+    best_v_loss = np.float('inf')
     count = 0
     while update < updates:
         if update > log_num:
