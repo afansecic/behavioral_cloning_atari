@@ -49,8 +49,13 @@ class DemoGenerator:
         print("env actions", env.action_space)
         self.env = env
 
-    def get_pseudo_rankings(self, epsilon_greedy_list):
+    def get_pseudo_rankings(self, epsilon_greedy_list, add_noop=False):
         ranked_batches = []
+
+        if add_noop:
+            #generate noop demonstrations by doing nothing for a while
+            demo_noop = self.generate_noop_demo(self.env)
+            ranked_batches.append(demo_noop)
         for epsilon_greedy in epsilon_greedy_list:
             demo_batch = self.generate_demos(self.env, self.agent, epsilon_greedy)
             ranked_batches.append(demo_batch)
@@ -59,10 +64,52 @@ class DemoGenerator:
     def get_pseudo_ranking_returns(self, epsilon_greedy_list):
 
         batch_returns = []
+
+
         for epsilon_greedy in epsilon_greedy_list:
             batch = self.generate_returns(self.env, self.agent, epsilon_greedy)
             batch_returns.append(batch)
         return batch_returns
+
+    def generate_noop_demo(self, env):
+        print("Generating demos for noop agent")
+
+        noop_action = 0
+
+        rewards = []
+        # 100 episodes
+        episode_count = 4
+        reward = 0
+        done = False
+        rewards = []
+        cum_steps = []
+        demos = []
+        #writer = open(self.checkpoint_dir + "/" +self.env_name + "_bc_results.txt", 'w')
+        for i in range(int(episode_count)):
+            ob = env.reset()
+            steps = 0
+            acc_reward = 0
+            traj = []
+            while True:
+                #preprocess the state
+                state = preprocess(ob, self.env_name)
+                traj.append(state)
+                state = np.transpose(state, (0, 3, 1, 2))
+                ob, reward, done, _ = env.step(noop_action)
+                steps += 1
+                acc_reward += reward
+                if done or steps > 500:
+                    print("Episode: {}, Steps: {}, Reward: {}".format(i,steps,acc_reward))
+                    #writer.write("{}\n".format(acc_reward[0]))
+                    rewards.append(acc_reward)
+                    cum_steps.append(steps)
+                    break
+            demos.append(traj)
+
+        print("Mean reward is: " + str(np.mean(rewards)))
+        print("Mean step length is: " + str(np.mean(cum_steps)))
+        return demos
+
 
 
     def generate_demos(self, env, agent, epsilon_greedy):
