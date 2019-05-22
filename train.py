@@ -73,6 +73,7 @@ def train(env_name,
                     break
             else:
                 best_v_loss = v_loss
+                print("updating best vloss", best_v_loss)
                 count = 0
         l = agent.train(dataset, minibatch_size)
         running_loss += l

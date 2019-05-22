@@ -41,7 +41,7 @@ plt.plot(noise_levels, np.mean(returns, axis = 1),'-.', label="bc")
 #plot the average of pure noise in dashed line for baseline
 plt.fill_between([0.01, 1.0], [np.mean(returns[-1]) - np.std(returns[-1]), np.mean(returns[-1]) - np.std(returns[-1])], [np.mean(returns[-1]) + np.mean(returns[-1]), np.mean(returns[-1]) + np.std(returns[-1])], alpha = 0.3)
 plt.plot([0.01,1.0], [np.mean(returns[-1]), np.mean(returns[-1])],'--', label="random")
-plt.legend()
+plt.legend(loc="best")
 plt.xlabel("Epsilon-greedy noise")
 plt.ylabel("Return")
 plt.tight_layout()
