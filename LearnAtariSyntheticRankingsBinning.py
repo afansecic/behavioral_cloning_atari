@@ -76,7 +76,7 @@ def generate_demos(env, env_name, agent, checkpoint_path, num_demos):
 def create_training_data_from_bins(_ranked_demos, num_snippets, min_snippet_length, max_snippet_length):
 
 
-    step = 2
+    step = 3 
     #n_train = 3000 #number of pairs of trajectories to create
     #snippet_length = 50
     training_obs = []
@@ -165,6 +165,7 @@ class Net(nn.Module):
         #x = x.view(-1, 1936)
         x = F.leaky_relu(self.fc1(x))
         #r = torch.tanh(self.fc2(x)) #clip reward?
+        #r = F.celu(self.fc2(x))
         r = self.fc2(x)
         sum_rewards += torch.sum(r)
         sum_abs_rewards += torch.sum(torch.abs(r))
@@ -295,11 +296,11 @@ if __name__=="__main__":
     parser.add_argument('--reward_model_path', default='', help="name and location for learned model params")
     parser.add_argument('--seed', default=0, help="random seed for experiments")
     parser.add_argument('--models_dir', default = ".", help="top directory where checkpoint models for demos are stored")
-    parser.add_argument("--num_bc_eval_episodes", type=int, default = 5, help="number of epsilon greedy BC demos to generate")
+    parser.add_argument("--num_bc_eval_episodes", type=int, default = 10, help="number of epsilon greedy BC demos to generate")
     parser.add_argument("--num_epsilon_greedy_demos", type=int, default=10, help="number of times to generate rollouts from each noise level")
     parser.add_argument("--checkpoint_path", help="path to checkpoint to run agent for demos")
     parser.add_argument("--num_demos", help="number of demos to generate", default=10, type=int)
-    parser.add_argument("--num_bc_steps", default = 50000, type=int, help='number of steps of BC to run')
+    parser.add_argument("--num_bc_steps", default = 75000, type=int, help='number of steps of BC to run')
 
     parser.add_argument("--minibatch-size", type=int, default=32)
     parser.add_argument("--hist-len", type=int, default=4)
@@ -334,17 +335,17 @@ if __name__=="__main__":
     print("Training reward for", env_id)
     #n_train = 200 #number of pairs of trajectories to create
     #snippet_length = 50 #length of trajectory for training comparison
-    lr = 0.00005
+    lr = 0.00001
     weight_decay = 0.0
     num_iter = 2 #num times through training data
-    l1_reg=0.00001
+    l1_reg=0.0
     stochastic = True
     bin_width = 0 #only bin things that have the same score
     num_snippets = 30000
     min_snippet_length = 50
     max_snippet_length = 100
     extra_checkpoint_info = "novice_demos"  #for finding checkpoint again
-    epsilon_greedy_list = [1.0,0.5,0.25,0.125,0.0625]#, 0.4, 0.2, 0.1]#[1.0, 0.5, 0.3, 0.1, 0.01]
+    epsilon_greedy_list = [1.0,0.5,0.2]#, 0.4, 0.2, 0.1]#[1.0, 0.5, 0.3, 0.1, 0.01]
 
 
 
