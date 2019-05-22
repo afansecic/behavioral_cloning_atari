@@ -21,12 +21,6 @@ def normalize_state(obs):
     return obs / 255.0
 
 
-def mask_score(obs):
-    #takes a stack of four observations and blacks out (sets to zero) top n rows
-    n = 10
-    #no_score_obs = copy.deepcopy(obs)
-    obs[:,:n,:,:] = 0
-    return obs
 
 class Evaluator:
 

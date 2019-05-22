@@ -56,6 +56,14 @@ class DemoGenerator:
             ranked_batches.append(demo_batch)
         return ranked_batches
 
+    def get_pseudo_ranking_returns(self, epsilon_greedy_list):
+
+        batch_returns = []
+        for epsilon_greedy in epsilon_greedy_list:
+            batch = self.generate_returns(self.env, self.agent, epsilon_greedy)
+            batch_returns.append(batch)
+        return batch_returns
+
 
     def generate_demos(self, env, agent, epsilon_greedy):
         print("Generating demos for epsilon=",epsilon_greedy)
@@ -98,6 +106,46 @@ class DemoGenerator:
         print("Mean reward is: " + str(np.mean(rewards)))
         print("Mean step length is: " + str(np.mean(cum_steps)))
         return demos
+
+    def generate_returns(self, env, agent, epsilon_greedy):
+        print("Generating returns for epsilon=",epsilon_greedy)
+        rewards = []
+        # 100 episodes
+        episode_count = self.num_eval_episodes
+        reward = 0
+        done = False
+        rewards = []
+        cum_steps = []
+
+        #writer = open(self.checkpoint_dir + "/" +self.env_name + "_bc_results.txt", 'w')
+        for i in range(int(episode_count)):
+            ob = env.reset()
+            steps = 0
+            acc_reward = 0
+            while True:
+                #preprocess the state
+                state = preprocess(ob, self.env_name)
+                state = np.transpose(state, (0, 3, 1, 2))
+                if np.random.rand() < epsilon_greedy:
+                    #print('eps greedy action')
+                    action = env.action_space.sample()
+                else:
+                    #print('policy action')
+                    action = agent.get_action(state)
+                ob, reward, done, _ = env.step(action)
+                steps += 1
+                acc_reward += reward
+                if done:
+                    print("Episode: {}, Steps: {}, Reward: {}".format(i,steps,acc_reward))
+                    #writer.write("{}\n".format(acc_reward[0]))
+                    rewards.append(acc_reward)
+                    cum_steps.append(steps)
+                    break
+
+        print("Mean reward is: " + str(np.mean(rewards)))
+        print("Mean step length is: " + str(np.mean(cum_steps)))
+        return rewards
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

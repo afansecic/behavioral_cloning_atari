@@ -1,9 +1,5 @@
 import argparse
-# coding: utf-8
-
-# Take length 50 snippets and record the cumulative return for each one. Then determine ground truth labels based on this.
-
-# In[1]:
+#Take a cloned policy and plot the degredation
 
 
 import pickle
@@ -292,11 +288,10 @@ def predict_traj_return(net, traj):
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument('--env_name', default='', help='Select the environment name to run, i.e. pong')
-    parser.add_argument('--reward_model_path', default='', help="name and location for learned model params")
     parser.add_argument('--seed', default=0, help="random seed for experiments")
     parser.add_argument('--models_dir', default = ".", help="top directory where checkpoint models for demos are stored")
-    parser.add_argument("--num_bc_eval_episodes", type=int, default = 5, help="number of epsilon greedy BC demos to generate")
-    parser.add_argument("--num_epsilon_greedy_demos", type=int, default=10, help="number of times to generate rollouts from each noise level")
+    parser.add_argument("--num_bc_eval_episodes", type=int, default = 0, help="number of epsilon greedy BC demos to generate")
+    parser.add_argument("--num_epsilon_greedy_demos", type=int, default=20, help="number of times to generate rollouts from each noise level")
     parser.add_argument("--checkpoint_path", help="path to checkpoint to run agent for demos")
     parser.add_argument("--num_demos", help="number of demos to generate", default=10, type=int)
     parser.add_argument("--num_bc_steps", default = 50000, type=int, help='number of steps of BC to run')
@@ -330,22 +325,7 @@ if __name__=="__main__":
     torch.manual_seed(seed)
     np.random.seed(seed)
 
-
-    print("Training reward for", env_id)
-    #n_train = 200 #number of pairs of trajectories to create
-    #snippet_length = 50 #length of trajectory for training comparison
-    lr = 0.00005
-    weight_decay = 0.0
-    num_iter = 2 #num times through training data
-    l1_reg=0.00001
-    stochastic = True
-    bin_width = 0 #only bin things that have the same score
-    num_snippets = 30000
-    min_snippet_length = 50
-    max_snippet_length = 100
-    extra_checkpoint_info = "novice_demos"  #for finding checkpoint again
-    epsilon_greedy_list = [1.0,0.5,0.25,0.125,0.0625]#, 0.4, 0.2, 0.1]#[1.0, 0.5, 0.3, 0.1, 0.01]
-
+    extra_checkpoint_info = "bc_degredation"  #for finding checkpoint again
 
 
     hist_length = 4
@@ -358,7 +338,7 @@ if __name__=="__main__":
                            'episode_life':False,
                        })
 
-
+    stochastic = True
     env = VecFrameStack(env, 4)
     demonstrator = PPO2Agent(env, env_type, stochastic)
 
@@ -369,11 +349,12 @@ if __name__=="__main__":
     dataset_size = sum([len(d) for d in demonstrations])
     print("Data set size = ", dataset_size)
 
-    data = dataset.Dataset(dataset_size, hist_length)
+
     episode_index_counter = 0
     num_data = 0
     action_set = set()
     action_cnt_dict = {}
+    data = []
     for episode in demonstrations:
         for sa in episode:
             state, action = sa
@@ -385,14 +366,30 @@ if __name__=="__main__":
                 action_cnt_dict[action] = 0
             #transpose into 4x84x84 format
             state = np.transpose(np.squeeze(state), (2, 0, 1))*255.
-            data.add_item(state, action)
-            num_data += 1
-            if num_data == dataset_size:
-                print("data set full")
-                break
-        if num_data == dataset_size:
+            data.append((state, action))
+
+    #take 10% as validation data
+    np.random.shuffle(data)
+    training_data_size = int(len(data) * 0.8)
+    training_data = data[:training_data_size]
+    validation_data = data[training_data_size:]
+    print("training size = {}, validation size = {}".format(len(training_data), len(validation_data)))
+    training_dataset = dataset.Dataset(training_data_size, hist_length)
+    validation_dataset = dataset.Dataset(len(validation_data), hist_length)
+    for state,action in training_data:
+        training_dataset.add_item(state, action)
+        num_data += 1
+        if num_data == training_dataset.size:
             print("data set full")
             break
+
+    for state, action in validation_data:
+        validation_dataset.add_item(state, action)
+        num_data += 1
+        if num_data == validation_dataset.size:
+            print("data set full")
+            break
+
     print("available actions", action_set)
     print(action_cnt_dict)
 
@@ -406,65 +403,32 @@ if __name__=="__main__":
         args.discount,
         args.checkpoint_dir,
         args.num_bc_steps,
-        data, args.num_bc_eval_episodes,
+        training_dataset,
+        validation_dataset,
+        args.num_bc_eval_episodes,
         0.01,
         extra_checkpoint_info)
 
     #minimal_action_set = acion_set
+    epsilon_greedy_list = [0.01]
+    for i in range(20):
+        epsilon_greedy_list.append(0.05 + i*0.05)
+    print("epsilon_greedy_list", epsilon_greedy_list)
 
     #agent = Clone(list(minimal_action_set), hist_length, args.checkpoint_bc_policy)
     print("beginning evaluation")
     generator = DemoGenerator(agent, args.env_name, args.num_epsilon_greedy_demos, args.seed)
-    ranked_demos, batch_rewards = generator.get_pseudo_rankings(epsilon_greedy_list)
+    batch_rewards = generator.get_pseudo_ranking_returns(epsilon_greedy_list)
 
-    ## Add the demonstrators demos as the highest ranked batch of trajectories, don't need actions
-    demo_demos = []
-    for d in demonstrations:
-        traj = []
-        for s,a in d:
-            traj.append(s)
-        demo_demos.append(traj)
-    ranked_demos.append(demo_demos)
-
-    #remove the extra first dimension on the observations
-    _ranked_demos = ranked_demos
-    ranked_demos = []
-    for _r in _ranked_demos:
-        r = []
-        for _d in _r:
-            d = []
-            for _ob in _d:
-                ob = _ob[0]
-                d.append(ob)
-            r.append(d)
-        ranked_demos.append(r)
-
-    print("Learning from ", len(ranked_demos), "synthetically ranked batches of demos")
-
-    training_obs, training_labels = create_training_data_from_bins(ranked_demos, num_snippets, min_snippet_length, max_snippet_length)
-    print("num training_obs", len(training_obs))
-    print("num_labels", len(training_labels))
-    # Now we create a reward network and optimize it using the training data.
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    reward_net = Net()
-    reward_net.to(device)
-    import torch.optim as optim
-    optimizer = optim.Adam(reward_net.parameters(),  lr=lr, weight_decay=weight_decay)
-    learn_reward(reward_net, optimizer, training_obs, training_labels, num_iter, l1_reg, args.reward_model_path)
-
-    with torch.no_grad():
-        for bin_num, demonstrations in enumerate(ranked_demos):
-            pred_returns = [predict_traj_return(reward_net, traj) for traj in demonstrations]
-            if bin_num < len(ranked_demos)-1:
-                print("Epsilon = ", epsilon_greedy_list[bin_num], "bin results:")
-            else:
-                print("Demonstrator demos:")
-            for i, p in enumerate(pred_returns):
-                print(i,p)
-
-
-    print("accuracy", calc_accuracy(reward_net, training_obs, training_labels))
-
-
-    #TODO:add checkpoints to training process
-    torch.save(reward_net.state_dict(), args.reward_model_path)
+    #write the batch rewards out to a file
+    writer = open("./bc_degredation_data/" + env_name + "_batch_rewards.csv",'w')
+    #first write the returns of the demonstrations
+    writer.write("demos, ")
+    for i in range(len(learning_returns)):
+        writer.write("{}, ".format(learning_returns[i]))
+    writer.write("{}\n".format(learning_returns[-1]))
+    for i,batch in enumerate(batch_rewards):
+        writer.write("{}, ".format(epsilon_greedy_list[i]))
+        for i in range(len(batch)-1):
+            writer.write("{}, ".format(batch[i][0]))
+        writer.write("{}\n".format(batch[-1][0]))

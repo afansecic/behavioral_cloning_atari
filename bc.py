@@ -56,6 +56,37 @@ class Imitator:
 	def get_loss(self, outputs, labels):
 		return nn.CrossEntropyLoss()(outputs, labels)
 
+	def validate(self, dataset, minibatch_size):
+		'''run dataset through loss to get validation error'''
+		validation_data = dataset.get_dataset()
+		v_loss = 0.0
+		for i in range(0,len(validation_data) - minibatch_size,minibatch_size):
+			sample = validation_data[i:i+minibatch_size]
+			with torch.no_grad():
+				state = Variable(utils.float_tensor(np.stack([np.squeeze(x.state) for x in sample])))
+				#print(state.size())
+				# compute the target values for the minibatch
+				labels = self.compute_labels(sample, minibatch_size)
+				#print(labels.size())
+				#print("labels", labels)
+				self.optimizer.zero_grad()
+				'''
+				Forward pass the minibatch through the
+				prediction network.
+				'''
+				activations = self.network(state)
+				'''
+				Extract the Q-value vectors of the minibatch
+				from the final layer's activations. See return values
+				of the forward() functions in cnn.py
+				'''
+				output = activations[len(activations) - 1]
+				loss = self.get_loss(output, labels)
+				v_loss += loss
+		return v_loss
+
+
+
 	def train(self, dataset, minibatch_size):
 		# sample a minibatch of transitions
 		sample = dataset.sample_minibatch(minibatch_size)
