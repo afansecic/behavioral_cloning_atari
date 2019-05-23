@@ -388,7 +388,7 @@ def convert_range(x,minimum, maximum,a,b):
 # In[16]:
 
 
-get_ipython().run_line_magic('matplotlib', 'inline')
+
 import matplotlib.pylab as plt
 learning_returns_noise = []
 for rbin in demo_returns:
