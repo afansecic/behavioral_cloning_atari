@@ -9,7 +9,7 @@
 
 # In[2]:
 
-
+import sys
 import argparse
 import pickle
 import gym
@@ -37,14 +37,14 @@ from LearnAtariSyntheticRankingsBinning import *
 # In[3]:
 
 
-env_name = 'spaceinvaders'
+env_name = sys.argv[1]
 model_dir = '/scratch/cluster/dsbrown/'
 if env_name == 'breakout':
     checkpoint_path = model_dir + 'models/breakout_25/01200'
 elif env_name == "beamrider":
     checkpoint_path = model_dir + 'models/beamrider_25/00700'
 elif env_name == "enduro":
-    checkpoint_path = model_dir +'models/enduro_25/003600'
+    checkpoint_path = model_dir +'models/enduro_25/03600'
 elif env_name == "pong":
     checkpoint_path = model_dir + "models/pong_25/00750"
 elif env_name == "qbert":
