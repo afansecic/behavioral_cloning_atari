@@ -38,7 +38,7 @@ from LearnAtariSyntheticRankingsBinning import *
 
 
 env_name = sys.argv[1]
-model_dir = '/scratch/cluster/dsbrown/'
+model_dir = '../learning-rewards-of-learners/learner/'
 if env_name == 'breakout':
     checkpoint_path = model_dir + 'models/breakout_25/01200'
 elif env_name == "beamrider":
@@ -418,25 +418,47 @@ pred_returns_extrapolate = np.array(pred_returns_extrapolate)
 # In[18]:
 
 
-buffer = 10
+# buffer = 10
+# import matplotlib.pylab as pylab
+# params = {'legend.fontsize': 'xx-large',
+#           'figure.figsize': (6, 5),
+#          'axes.labelsize': 'xx-large',
+#          'axes.titlesize':'xx-large',
+#          'xtick.labelsize':'xx-large',
+#          'ytick.labelsize':'xx-large'}
+# pylab.rcParams.update(params)
+# print(pred_returns_all)
+# print(learning_returns_all)
+# #plt.plot(learning_returns_all, [convert_range(p,max(pred_returns_all), min(pred_returns_all),max(learning_returns_all), min(learning_returns_all)) for p in pred_returns_all],'ro')
+# plt.plot(learning_returns_noise/max(learning_returns_all), pred_returns_noise/max(pred_returns_all), 'bo')
+# plt.plot(learning_returns/max(learning_returns_all), pred_demo_returns/max(pred_returns_all), 'ro')
+# plt.plot(learning_returns_extrapolate/max(learning_returns_all), pred_returns_extrapolate/max(pred_returns_all), 'go')
+# #plt.plot(learning_returns_extrapolate, [convert_range(p,max(pred_returns_all), min(pred_returns_all),max(learning_returns_all), min(learning_returns_all)) for p in pred_returns_extrapolate],'bo')
+# plt.plot([0,1],[0,1],'k--')
+# #plt.plot([0,max(learning_returns_demos)],[0,max(learning_returns_demos)],'k-', linewidth=2)
+# #plt.axis([0,max(learning_returns_all) + buffer,0,max(learning_returns_all)+buffer])
+# plt.xlabel("Ground Truth Returns")
+# plt.ylabel("Predicted Returns (normalized)")
+# plt.tight_layout()
+buffer = 20
+if env_name == "pong":
+    buffer = 2
 import matplotlib.pylab as pylab
 params = {'legend.fontsize': 'xx-large',
-          'figure.figsize': (6, 5),
+         # 'figure.figsize': (6, 5),
          'axes.labelsize': 'xx-large',
          'axes.titlesize':'xx-large',
          'xtick.labelsize':'xx-large',
          'ytick.labelsize':'xx-large'}
 pylab.rcParams.update(params)
+
 print(pred_returns_all)
 print(learning_returns_all)
-#plt.plot(learning_returns_all, [convert_range(p,max(pred_returns_all), min(pred_returns_all),max(learning_returns_all), min(learning_returns_all)) for p in pred_returns_all],'ro')
-plt.plot(learning_returns_noise/max(learning_returns_all), pred_returns_noise/max(pred_returns_all), 'bo')
-plt.plot(learning_returns/max(learning_returns_all), pred_demo_returns/max(pred_returns_all), 'ro')
-plt.plot(learning_returns_extrapolate/max(learning_returns_all), pred_returns_extrapolate/max(pred_returns_all), 'go')
-#plt.plot(learning_returns_extrapolate, [convert_range(p,max(pred_returns_all), min(pred_returns_all),max(learning_returns_all), min(learning_returns_all)) for p in pred_returns_extrapolate],'bo')
-plt.plot([0,1],[0,1],'k--')
-#plt.plot([0,max(learning_returns_demos)],[0,max(learning_returns_demos)],'k-', linewidth=2)
-#plt.axis([0,max(learning_returns_all) + buffer,0,max(learning_returns_all)+buffer])
+plt.plot(learning_returns_noise, [convert_range(p,max(pred_returns_all), min(pred_returns_all),max(learning_returns_all), min(learning_returns_all)) for p in pred_returns_noise],'bo')
+plt.plot(learning_returns, [convert_range(p,max(pred_returns_all), min(pred_returns_all),max(learning_returns_all), min(learning_returns_all)) for p in pred_demo_returns],'ro')
+plt.plot(learning_returns_extrapolate, [convert_range(p,max(pred_returns_all), min(pred_returns_all),max(learning_returns_all), min(learning_returns_all)) for p in pred_returns_extrapolate],'go')
+plt.plot([min(0, min(learning_returns_all)-2),max(learning_returns_all) + buffer],[min(0, min(learning_returns_all)-2),max(learning_returns_all) + buffer],'k--')
+plt.axis([min(0, min(learning_returns_all)-2),max(learning_returns_all) + buffer,min(0, min(learning_returns_all)-2),max(learning_returns_all)+buffer])
 plt.xlabel("Ground Truth Returns")
 plt.ylabel("Predicted Returns (normalized)")
 plt.tight_layout()
