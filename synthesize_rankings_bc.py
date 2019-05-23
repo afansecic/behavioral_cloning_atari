@@ -49,17 +49,21 @@ class DemoGenerator:
         print("env actions", env.action_space)
         self.env = env
 
-    def get_pseudo_rankings(self, epsilon_greedy_list, add_noop=False):
+    def get_pseudo_rankings(self, epsilon_greedy_list, add_noop=False, returns=False):
         ranked_batches = []
-
+        batch_returns = []
         if add_noop:
             #generate noop demonstrations by doing nothing for a while
             demo_noop = self.generate_noop_demo(self.env)
             ranked_batches.append(demo_noop)
         for epsilon_greedy in epsilon_greedy_list:
-            demo_batch = self.generate_demos(self.env, self.agent, epsilon_greedy)
+            demo_batch, returns = self.generate_demos(self.env, self.agent, epsilon_greedy)
             ranked_batches.append(demo_batch)
-        return ranked_batches
+            batch_returns.append(returns)
+        if returns:
+            return ranked_batches, batch_returns
+        else:
+            return ranked_batches
 
     def get_pseudo_ranking_returns(self, epsilon_greedy_list):
 
@@ -152,7 +156,7 @@ class DemoGenerator:
 
         print("Mean reward is: " + str(np.mean(rewards)))
         print("Mean step length is: " + str(np.mean(cum_steps)))
-        return demos
+        return demos, rewards
 
     def generate_returns(self, env, agent, epsilon_greedy):
         print("Generating returns for epsilon=",epsilon_greedy)

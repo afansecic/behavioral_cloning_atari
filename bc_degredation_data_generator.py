@@ -424,7 +424,7 @@ if __name__=="__main__":
     writer = open("./bc_degredation_data/" + env_name + "_batch_rewards.csv",'w')
     #first write the returns of the demonstrations
     writer.write("demos, ")
-    for i in range(len(learning_returns)):
+    for i in range(len(learning_returns)-1):
         writer.write("{}, ".format(learning_returns[i]))
     writer.write("{}\n".format(learning_returns[-1]))
     for i,batch in enumerate(batch_rewards):
