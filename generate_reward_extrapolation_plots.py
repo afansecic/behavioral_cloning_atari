@@ -38,7 +38,7 @@ from LearnAtariSyntheticRankingsBinning import *
 
 
 env_name = sys.argv[1]
-model_dir = '../learning-rewards-of-learners/learner/'
+model_dir = '/scratch/cluster/dsbrown/'
 if env_name == 'breakout':
     checkpoint_path = model_dir + 'models/breakout_25/01200'
 elif env_name == "beamrider":
@@ -212,9 +212,9 @@ elif env_name == "pong":
     checkpoint_step = 25
     episode_count = 1
 elif env_name == "seaquest":
-    checkpoint_min = 700
-    checkpoint_max = 1450
-    checkpoint_step = 25
+    checkpoint_min = 100
+    checkpoint_max = 1400
+    checkpoint_step = 100
     episode_count = 1
 elif env_name == "qbert":
     checkpoint_min = 550
