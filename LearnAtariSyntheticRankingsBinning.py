@@ -375,9 +375,10 @@ if __name__=="__main__":
 
     hist_length = 4
 
+    demo_env_seed = 0 #keep this fixed so demonstration performance is fixed
 
     #env id, env type, num envs, and seed
-    env = make_vec_env(env_id, 'atari', 1, seed,
+    env = make_vec_env(env_id, 'atari', 1, demo_env_seed,
                        wrapper_kwargs={
                            'clip_rewards':False,
                            'episode_life':False,
