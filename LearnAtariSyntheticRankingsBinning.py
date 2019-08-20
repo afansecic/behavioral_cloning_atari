@@ -367,7 +367,7 @@ if __name__=="__main__":
     bin_width = 0 #only bin things that have the same score
     num_snippets = 40000
     min_snippet_length = 50
-    max_snippet_length = 200
+    max_snippet_length = 100
     extra_checkpoint_info = "novice_demos"  #for finding checkpoint again
     epsilon_greedy_list = [1.0,0.75,0.5,0.25,0.01]#, 0.4, 0.2, 0.1]#[1.0, 0.5, 0.3, 0.1, 0.01]
 
