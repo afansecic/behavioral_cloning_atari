@@ -319,7 +319,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description=None)
     parser.add_argument('--env_name', default='', help='Select the environment name to run, i.e. pong')
     parser.add_argument('--reward_model_path', default='', help="name and location for learned model params")
-    parser.add_argument('--seed', default=0, help="random seed for experiments")
+    parser.add_argument('--seed', default=0, type=int, help="random seed for experiments")
     parser.add_argument("--num_bc_eval_episodes", type=int, default = 2, help="number of epsilon greedy BC demos to generate")
     parser.add_argument("--num_epsilon_greedy_demos", type=int, default=20, help="number of times to generate rollouts from each noise level")
     parser.add_argument("--checkpoint_path", help="path to checkpoint to run agent for demos")
