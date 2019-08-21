@@ -57,9 +57,9 @@ class DemoGenerator:
             demo_noop = self.generate_noop_demo(self.env)
             ranked_batches.append(demo_noop)
         for epsilon_greedy in epsilon_greedy_list:
-            demo_batch, returns = self.generate_demos(self.env, self.agent, epsilon_greedy)
+            demo_batch, demo_returns = self.generate_demos(self.env, self.agent, epsilon_greedy)
             ranked_batches.append(demo_batch)
-            batch_returns.append(returns)
+            batch_returns.append(demo_returns)
         if returns:
             return ranked_batches, batch_returns
         else:
@@ -135,6 +135,7 @@ class DemoGenerator:
             while True:
                 #preprocess the state
                 state = preprocess(ob, self.env_name)
+
                 traj.append(state)
                 state = np.transpose(state, (0, 3, 1, 2))
                 if np.random.rand() < epsilon_greedy:
@@ -152,7 +153,9 @@ class DemoGenerator:
                     rewards.append(acc_reward)
                     cum_steps.append(steps)
                     break
+            print("traj length", len(traj))
             demos.append(traj)
+            print("demo len", len(demos))
 
         print("Mean reward is: " + str(np.mean(rewards)))
         print("Mean step length is: " + str(np.mean(cum_steps)))
