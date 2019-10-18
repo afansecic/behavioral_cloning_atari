@@ -26,7 +26,7 @@ def mask_score(obs):
 
 def generate_novice_demos(env, env_name, agent):
     checkpoint_min = 50
-    checkpoint_max = 600
+    checkpoint_max = 200
     checkpoint_step = 50
     checkpoints = []
     if env_name == "enduro":
@@ -191,11 +191,15 @@ if __name__ == '__main__':
         action_set,
         args.learning_rate,
         args.alpha,
-        args.min_squared_gradient,
         args.l2_penalty,
         args.minibatch_size,
         args.hist_len,
         args.discount,
         args.checkpoint_dir,
-        dataset_size*3,
-        data, args.num_eval_episodes)
+        dataset_size,
+        data,
+        [],
+        args.num_eval_episodes,
+        0.01,
+        "standard_bc"
+        )

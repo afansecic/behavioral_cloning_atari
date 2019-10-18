@@ -40,7 +40,7 @@ class PPO2Agent(object):
     def load(self, path):
         self.model.load(path)
 
-    def act(self, observation, reward, done):
+    def act(self, observation):
         if self.stochastic:
             a,v,state,neglogp = self.model.step(observation)
         else:
@@ -163,7 +163,7 @@ if __name__ == '__main__':
         steps = 0
         acc_reward = 0
         while True:
-            action = agent.act(ob, reward, done)
+            action = agent.act(ob)
             ob, reward, done, _ = env.step(action)
             if args.render:
                 env.render()

@@ -6,8 +6,6 @@ import utils
 #from ale_wrapper import ALEInterfaceWrapper
 from evaluator import Evaluator
 from pdb import set_trace
-import matplotlib as mpl
-mpl.use('Agg')
 import matplotlib.pyplot as plt
 #try bmh
 plt.style.use('bmh')
@@ -43,6 +41,8 @@ def train(env_name,
         epsilon_greedy,
         extra_info):
 
+    import tracemalloc
+
     # create DQN agent
     agent = Imitator(list(minimal_action_set),
                 learning_rate,
@@ -52,13 +52,26 @@ def train(env_name,
                 l2_penalty)
 
     print("Beginning training...")
-    log_frequency = 1000
+    log_frequency = 500
     log_num = log_frequency
     update = 1
     running_loss = 0.
     best_v_loss = np.float('inf')
     count = 0
     while update < updates:
+        # snapshot = tracemalloc.take_snapshot()
+        # top_stats = snapshot.statistics('lineno')
+        # import gc
+        # for obj in gc.get_objects():
+        #     try:
+        #         if torch.is_tensor(obj) or (hasattr(obj, 'data') and torch.is_tensor(obj.data)):
+        #             print(type(obj), obj.size())
+        #     except:
+        #         pass
+        #
+        # print("[ Top 10 ]")
+        # for stat in top_stats[:10]:
+        #     print(stat)
         if update > log_num:
             print(str(update) + " updates completed. Loss {}".format(running_loss / log_frequency))
             log_num += log_frequency
@@ -67,24 +80,20 @@ def train(env_name,
             v_loss = agent.validate(validation_dataset, 10)
             print("Validation accuracy = {}".format(v_loss / validation_dataset.size))
             if v_loss > best_v_loss:
-                count += 1
-                if count > 5:
-                    print("validation not improing for {} steps. Stopping to prevent overfitting".format(count))
-                    break
+               count += 1
+               if count > 5:
+                   print("validation not improing for {} steps. Stopping to prevent overfitting".format(count))
+                   break
             else:
-                best_v_loss = v_loss
-                print("updating best vloss", best_v_loss)
-                count = 0
+               best_v_loss = v_loss
+               print("updating best vloss", best_v_loss)
+               count = 0
         l = agent.train(dataset, minibatch_size)
         running_loss += l
         update += 1
     print("Training completed.")
     agent.checkpoint_network(env_name, extra_info)
     #Plot losses
-    losses = []
-    for loss in agent.losses:
-        losses.append(loss.data.cpu().numpy())
-    plot(losses, checkpoint_dir, env_name)
     #Evaluation
     print("beginning evaluation")
     evaluator = Evaluator(env_name, num_eval_episodes, checkpoint_dir, epsilon_greedy)
@@ -127,11 +136,6 @@ def train_transitions(env_name,
         update += 1
     print("Training completed.")
     agent.checkpoint_network(env_name + "_transitions")
-    #Plot losses
-    losses = []
-    for loss in agent.losses:
-        losses.append(loss.data.cpu().numpy())
-    plot(losses, checkpoint_dir, env_name + "_transitions")
 
     #calculate accuacy
 

@@ -24,7 +24,6 @@ class Imitator:
 		self.optimizer = optim.Adam(self.network.parameters(),
 		lr=learning_rate, weight_decay=l2_penalty)
 		self.checkpoint_directory = checkpoint_dir
-		self.losses = []
 
 
 	def predict(self, state):
@@ -108,7 +107,7 @@ class Imitator:
 		'''
 		output = activations[len(activations) - 1]
 		loss = self.get_loss(output, labels)
-		self.losses.append(loss)
+		#self.losses.append(loss)
 		loss.backward()
 		self.optimizer.step()
 		return loss
