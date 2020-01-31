@@ -115,6 +115,7 @@ def play(env, transpose=True, fps=30, zoom=None, callback=None, keys_to_action=N
             obs = env.reset()
             if current_episode:
                 episodes.append(current_episode)
+                break  #remove this to allow multiple games in a row. Game is only saved if fully completed!
             current_episode = []
         else:
             action = keys_to_action.get(tuple(sorted(pressed_keys)), 0)
@@ -188,7 +189,7 @@ def main():
     parser.add_argument('--env', type=str, default='MontezumaRevengeNoFrameskip-v4', help='Define Environment')
     args = parser.parse_args()
     env = gym.make(args.env)
-    episodes = play(env, zoom=4, fps=60)
+    episodes = play(env, zoom=2, fps=60)
     human_episodes = []
     for episode in episodes:
         human_episodes.append(HumanEpisode(episode))

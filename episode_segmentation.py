@@ -13,6 +13,7 @@ class HumanEpisode(object):
 
 	def __init__(self, episode):
 		num_frames = len(episode)
+		print("Num frames", num_frames)
 		self.episode_len = num_frames
 		self.height = 210
 		self.width = 160
