@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0,'./baselines/')
 import torch
 import argparse
 import numpy as np
@@ -147,24 +149,16 @@ if __name__ == '__main__':
     agent = PPO2Agent(env, env_type, stochastic)
 
     demonstrations, learning_returns, _ = generate_novice_demos(env, env_name, agent)
-    print("choosing best {} percent of demos".format(args.use_best * 100))
-    demonstrations = [x for _, x in sorted(zip(learning_returns,demonstrations), key=lambda pair: pair[0])]
-    start_index = len(demonstrations) - int(len(demonstrations) * args.use_best)
-    demonstrations = demonstrations[start_index:]
-    print(len(demonstrations))
-    for d in demonstrations:
-        print(len(d))
-
-
-
+    #Run BC on demos
     dataset_size = sum([len(d) for d in demonstrations])
     print("Data set size = ", dataset_size)
 
-    data = dataset.Dataset(dataset_size, args.hist_len)
+
     episode_index_counter = 0
     num_data = 0
     action_set = set()
     action_cnt_dict = {}
+    data = []
     for episode in demonstrations:
         for sa in episode:
             state, action = sa
@@ -176,18 +170,36 @@ if __name__ == '__main__':
                 action_cnt_dict[action] = 0
             #transpose into 4x84x84 format
             state = np.transpose(np.squeeze(state), (2, 0, 1))*255.
-            data.add_item(state, action)
-            num_data += 1
-            if num_data == dataset_size:
-                print("data set full")
-                break
-        if num_data == dataset_size:
+            data.append((state, action))
+
+    #take 10% as validation data
+    np.random.shuffle(data)
+    training_data_size = int(len(data) * 0.8)
+    training_data = data[:training_data_size]
+    validation_data = data[training_data_size:]
+    print("training size = {}, validation size = {}".format(len(training_data), len(validation_data)))
+    training_dataset = dataset.Dataset(training_data_size, hist_length)
+    validation_dataset = dataset.Dataset(len(validation_data), hist_length)
+    for state,action in training_data:
+        training_dataset.add_item(state, action)
+        num_data += 1
+        if num_data == training_dataset.size:
             print("data set full")
             break
+
+    for state, action in validation_data:
+        validation_dataset.add_item(state, action)
+        num_data += 1
+        if num_data == validation_dataset.size:
+            print("data set full")
+            break
+
     print("available actions", action_set)
     print(action_cnt_dict)
 
-    train(args.env_name,
+    print(validation_dataset)
+    input()
+    agent = train(args.env_name,
         action_set,
         args.learning_rate,
         args.alpha,
@@ -196,10 +208,10 @@ if __name__ == '__main__':
         args.hist_len,
         args.discount,
         args.checkpoint_dir,
-        dataset_size,
-        data,
-        [],
-        args.num_eval_episodes,
+        args.num_bc_steps,
+        training_dataset,
+        validation_dataset,
+        args.num_bc_eval_episodes,
         0.01,
         "standard_bc"
         )
